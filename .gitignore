@@ -1,0 +1,7 @@
+# System files
+.DS_Store
+
+# Build artifacts
+bin/*
+!bin/.gitkeep
+*.o
