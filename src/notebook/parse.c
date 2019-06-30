@@ -96,7 +96,7 @@ static int cb_enter_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
     case MD_BLOCK_LI:       s->html = sdscat(s->html, "<li>"); break;
     case MD_BLOCK_HR:       s->html = sdscat(s->html, "<hr>"); break;
     case MD_BLOCK_H:        s->html = sdscatfmt(s->html, "<h%u>", ((MD_BLOCK_H_DETAIL*) detail)->level); break;
-    case MD_BLOCK_CODE:     s->html = sdscatfmt(s->html, "<pre><code>"); break;
+    case MD_BLOCK_CODE:     s->html = cat_code(s->html, detail); break;
     case MD_BLOCK_P:        s->html = sdscat(s->html, "<p>"); break;
     default:                /* nothing, we don't have tables or html blocks */ break;
   }
@@ -144,16 +144,17 @@ static int cb_enter_span(MD_SPANTYPE type, void* detail, void* userdata) {
   }
 
   switch(type) {
-    case MD_SPAN_EM:        s->html = sdscat(s->html, "<em>"); break;
-    case MD_SPAN_STRONG:    s->html = sdscat(s->html, "<strong>"); break;
-    case MD_SPAN_CODE:      s->html = sdscat(s->html, "<code>"); break;
-    case MD_SPAN_DEL:       s->html = sdscat(s->html, "<del>"); break;
-    case MD_SPAN_A:         s->html = cat_a(s->html, detail); break;
+    case MD_SPAN_EM:            s->html = sdscat(s->html, "<em>"); break;
+    case MD_SPAN_STRONG:        s->html = sdscat(s->html, "<strong>"); break;
+    case MD_SPAN_CODE:          s->html = sdscat(s->html, "<code>"); break;
+    case MD_SPAN_DEL:           s->html = sdscat(s->html, "<del>"); break;
+    case MD_SPAN_A:             s->html = cat_a(s->html, detail); break;
     case MD_SPAN_IMG:
       s->html = cat_img(s->html, detail);
       s->mask |= m_image_open;
       break;
-    case MD_SPAN_LATEX:     s->html = sdscat(s->html, "<equation>"); break;
+    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "<equation type=\"display\">"); break;
+    case MD_SPAN_LATEX:         s->html = sdscat(s->html, "<equation>"); break;
   }
 
   return 0;
@@ -168,16 +169,17 @@ static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
   }
 
   switch(type) {
-    case MD_SPAN_EM:        s->html = sdscat(s->html, "</em>"); break;
-    case MD_SPAN_STRONG:    s->html = sdscat(s->html, "</strong>"); break;
-    case MD_SPAN_CODE:      s->html = sdscat(s->html, "</code>"); break;
-    case MD_SPAN_DEL:       s->html = sdscat(s->html, "</del>"); break;
-    case MD_SPAN_A:         s->html = sdscat(s->html, "</a>"); break;
+    case MD_SPAN_EM:            s->html = sdscat(s->html, "</em>"); break;
+    case MD_SPAN_STRONG:        s->html = sdscat(s->html, "</strong>"); break;
+    case MD_SPAN_CODE:          s->html = sdscat(s->html, "</code>"); break;
+    case MD_SPAN_DEL:           s->html = sdscat(s->html, "</del>"); break;
+    case MD_SPAN_A:             s->html = sdscat(s->html, "</a>"); break;
     case MD_SPAN_IMG:
       s->html = sdscat(s->html, "\">");
       s->mask ^= m_image_open;
       break;
-    case MD_SPAN_LATEX:     s->html = sdscat(s->html, "</equation>"); break;
+    case MD_SPAN_LATEX_DISPLAY:
+    case MD_SPAN_LATEX:         s->html = sdscat(s->html, "</equation>"); break;
   }
 
   return 0;

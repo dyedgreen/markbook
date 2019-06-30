@@ -15,12 +15,12 @@ int main() {
     "> *quote*\n"\
     "> hello.\n"\
     "\n"\
-    // "$$\n"\
-    // "\\LaTeX \\int_a^b x^2 \\alpha dx\n"\
-    // "$$\n"
+    "$$\n"\
+    "\\LaTeX \\int_a^b x^2 \\alpha dx\n"\
+    "$$\n"
     "\n"\
     "This is a $a+b=c$ ~deleted here~ list:\n"\
-    "This is a $a+b=c$ list:\n"\
+    "This is a $\\int_a^b x^2$ list:\n"\
     "* Hello\n* World\n"\
     "\n"\
     "1) Hi\n 2) There!\n"\
