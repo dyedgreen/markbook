@@ -7,19 +7,37 @@ int main() {
   const char* markdown = \
     "# Hello World\n"\
     "\n"\
-    "This is some text\n"\
+    "This is some text *emph* **strong** *nested **strong** here*.\n"\
     "in a paragraph.\n"\
-    "It contains some [links](https://tilman.xyz)!\n"\
+    "It contains    some [*links*](https://tilman.xyz)!\n"\
     "\n"\
-    "![this is a description](https://tilman.xyz/assets/hero.png)\n"\
+    "> # This is a\n"\
+    "> *quote*\n"\
+    "> hello.\n"\
     "\n"\
-    "This is a new\n"\
+    "This is a list:\n"\
+    "* Hello\n* World\n"\
+    "\n"\
+    "1) Hi\n 2) There!\n"\
+    "\n"\
+    "```Python\n"\
+    "print('Hello World!')\n"\
+    "```\n"\
+    "\n"\
+    "```\n"\
+    "print('Hello World!')\n"\
+    "```\n"\
+    "\n"\
+    "![this *is* a description](https://tilman.xyz/assets/hero.png)\n"\
+    "\n"\
+    "This is a new &amp; \\$\n"\
     "paragraph!\n"\
     "\n";
 
 
-  char* json = (char*)render_json(markdown);
-  printf("%s\n", json); // should free sds string here
+  char* html = (char*)parse(markdown);
+  printf("%s\n", html);
+  sdsfree(html);
 
   return 0;
 }
