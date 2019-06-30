@@ -15,7 +15,12 @@ int main() {
     "> *quote*\n"\
     "> hello.\n"\
     "\n"\
-    "This is a list:\n"\
+    // "$$\n"\
+    // "\\LaTeX \\int_a^b x^2 \\alpha dx\n"\
+    // "$$\n"
+    "\n"\
+    "This is a $a+b=c$ ~deleted here~ list:\n"\
+    "This is a $a+b=c$ list:\n"\
     "* Hello\n* World\n"\
     "\n"\
     "1) Hi\n 2) There!\n"\
@@ -30,7 +35,7 @@ int main() {
     "\n"\
     "![this *is* a description](https://tilman.xyz/assets/hero.png)\n"\
     "\n"\
-    "This is a new &amp; \\$\n"\
+    "This is a new ~deleted here~ &amp; \\$\n"\
     "paragraph!\n"\
     "\n";
 

@@ -153,6 +153,7 @@ static int cb_enter_span(MD_SPANTYPE type, void* detail, void* userdata) {
       s->html = cat_img(s->html, detail);
       s->mask |= m_image_open;
       break;
+    case MD_SPAN_LATEX:     s->html = sdscat(s->html, "<equation>"); break;
   }
 
   return 0;
@@ -176,6 +177,7 @@ static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
       s->html = sdscat(s->html, "\">");
       s->mask ^= m_image_open;
       break;
+    case MD_SPAN_LATEX:     s->html = sdscat(s->html, "</equation>"); break;
   }
 
   return 0;
@@ -191,7 +193,7 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
     case MD_TEXT_HTML:      /* fall through */
     case MD_TEXT_CODE:      s->html = sdscatlen(s->html, text, size); break;
     case MD_TEXT_NULLCHAR:  /* nothing (breaking common mark compliance) */ break;
-    case MD_TEXT_BR:        /* nothing */ break;
+    case MD_TEXT_BR:        s->html = sdscat(s->html, "<br>"); break;
     case MD_TEXT_SOFTBR:    s->html = sdscat(s->html, "\n"); break;
   }
 
@@ -219,7 +221,7 @@ sds parse(const char* text) {
 
   MD_PARSER parser = {
     0,
-    MD_FLAG_NOHTML | MD_FLAG_COLLAPSEWHITESPACE | MD_FLAG_STRIKETHROUGH,
+    PARSER_FLAGS,
     cb_enter_block,
     cb_leave_block,
     cb_enter_span,

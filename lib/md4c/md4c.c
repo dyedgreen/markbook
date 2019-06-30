@@ -127,7 +127,7 @@ struct MD_CTX_tag {
 #endif
 
     /* For resolving of inline spans. */
-    MD_MARKCHAIN mark_chains[11];
+    MD_MARKCHAIN mark_chains[12];
 #define PTR_CHAIN                               ctx->mark_chains[0]
 #define TABLECELLBOUNDARIES                     ctx->mark_chains[1]
 #define ASTERISK_OPENERS_extraword_mod3_0       ctx->mark_chains[2]
@@ -139,6 +139,8 @@ struct MD_CTX_tag {
 #define UNDERSCORE_OPENERS                      ctx->mark_chains[8]
 #define TILDE_OPENERS                           ctx->mark_chains[9]
 #define BRACKET_OPENERS                         ctx->mark_chains[10]
+    // DELME: Here we put the mark chain for DOLLAR_OPENERS
+#define DOLLAR_OPENERS                          ctx->mark_chains[11]
 #define OPENERS_CHAIN_FIRST                     2
 #define OPENERS_CHAIN_LAST                      10
 
@@ -1128,7 +1130,7 @@ md_is_html_comment(MD_CTX* ctx, const MD_LINE* lines, int n_lines, OFF beg, OFF 
     if(off+1 < lines[0].end  &&  CH(off) == _T('-')  &&  CH(off+1) == _T('>'))
         return FALSE;
 
-    /* HTML comment must not contyain "--", so we scan just for "--" instead
+    /* HTML comment must not contain "--", so we scan just for "--" instead
      * of "-->" and verify manually that '>' follows. */
     if(md_scan_for_html_closer(ctx, _T("--"), 2,
                 lines, n_lines, off, max_end, p_end, &ctx->html_comment_horizon))
@@ -2683,6 +2685,10 @@ md_build_mark_char_map(MD_CTX* ctx)
     if(ctx->parser.flags & MD_FLAG_STRIKETHROUGH)
         ctx->mark_char_map['~'] = 1;
 
+    // DELME: Here would be a dollar one for equations
+    if(ctx->parser.flags & MD_FLAG_LATEX)
+        ctx->mark_char_map['$'] = 1;
+
     if(ctx->parser.flags & MD_FLAG_PERMISSIVEEMAILAUTOLINKS)
         ctx->mark_char_map['@'] = 1;
 
@@ -3251,6 +3257,18 @@ md_collect_marks(MD_CTX* ctx, const MD_LINE* lines, int n_lines, int table_mode)
                 continue;
             }
 
+            // DELME: Here would be a potential $
+            /* A potential inline equation start/end */
+            if(ch == _T('$')) {
+                // Inline equation $ can not be followed by second dollar
+                // and should not be at the end of a line
+                if (off+1 < line_end && CH(off+1) != _T('$')) {
+                    PUSH_MARK(ch, off, off+1, MD_MARK_POTENTIAL_OPENER | MD_MARK_POTENTIAL_CLOSER);
+                    off ++;
+                }
+                continue;
+            }
+
             /* Turn non-trivial whitespace into single space. */
             if(ISWHITESPACE_(ch)) {
                 OFF tmp = off+1;
@@ -3630,6 +3648,24 @@ md_analyze_tilde(MD_CTX* ctx, int mark_index)
     }
 }
 
+// DELME: Here would be md_analyze_dollar
+static void
+md_analyze_dollar(MD_CTX* ctx, int mark_index)
+{
+    /* This should mimic the way inline equations work in LaTeX, so there
+     * can only ever be one item in the chain (i.e. the dollars can't be
+     * nested). This is basically the same as the md_analyze_tilde function. */
+    if(DOLLAR_OPENERS.head >= 0) {
+        /* The chain already contains an opener, so we are the closer. */
+        int opener_index = DOLLAR_OPENERS.head;
+
+        md_rollback(ctx, opener_index, mark_index, MD_ROLLBACK_CROSSING);
+        md_resolve_range(ctx, &DOLLAR_OPENERS, opener_index, mark_index);
+    } else {
+        md_mark_chain_append(ctx, &DOLLAR_OPENERS, mark_index);
+    }
+}
+
 static void
 md_analyze_permissive_url_autolink(MD_CTX* ctx, int mark_index)
 {
@@ -3785,6 +3821,8 @@ md_analyze_marks(MD_CTX* ctx, const MD_LINE* lines, int n_lines,
             case '_':   /* Pass through. */
             case '*':   md_analyze_emph(ctx, i); break;
             case '~':   md_analyze_tilde(ctx, i); break;
+            // DELME: here would be an extra quy for the single dollar
+            case '$':   md_analyze_dollar(ctx, i); break;
             case '.':   /* Pass through. */
             case ':':   md_analyze_permissive_url_autolink(ctx, i); break;
             case '@':   md_analyze_permissive_email_autolink(ctx, i); break;
@@ -3837,11 +3875,12 @@ abort:
     return ret;
 }
 
+// DELME: This is where we would have to add the dollar
 static void
 md_analyze_link_contents(MD_CTX* ctx, const MD_LINE* lines, int n_lines,
                          int mark_beg, int mark_end)
 {
-    md_analyze_marks(ctx, lines, n_lines, mark_beg, mark_end, _T("*_~@:."));
+    md_analyze_marks(ctx, lines, n_lines, mark_beg, mark_end, _T("*_~$@:."));
     ASTERISK_OPENERS_extraword_mod3_0.head = -1;
     ASTERISK_OPENERS_extraword_mod3_0.tail = -1;
     ASTERISK_OPENERS_extraword_mod3_1.head = -1;
@@ -3858,6 +3897,9 @@ md_analyze_link_contents(MD_CTX* ctx, const MD_LINE* lines, int n_lines,
     UNDERSCORE_OPENERS.tail = -1;
     TILDE_OPENERS.head = -1;
     TILDE_OPENERS.tail = -1;
+    // DELME: And here we reset the DOLLAR_OPENERS
+    DOLLAR_OPENERS.head = -1;
+    DOLLAR_OPENERS.tail = -1;
 }
 
 static int
@@ -3972,6 +4014,17 @@ md_process_inlines(MD_CTX* ctx, const MD_LINE* lines, int n_lines)
                         MD_ENTER_SPAN(MD_SPAN_DEL, NULL);
                     else
                         MD_LEAVE_SPAN(MD_SPAN_DEL, NULL);
+                    break;
+
+                // DELME: Here would then be enter and leave for the dollar spans
+                case '$':
+                    if(mark->flags & MD_MARK_OPENER) {
+                        MD_ENTER_SPAN(MD_SPAN_LATEX, NULL);
+                        text_type = MD_TEXT_CODE; // LaTeX should be read as code
+                    } else {
+                        MD_LEAVE_SPAN(MD_SPAN_LATEX, NULL);
+                        text_type = MD_TEXT_NORMAL;
+                    }
                     break;
 
                 case '[':       /* Link, image. */
