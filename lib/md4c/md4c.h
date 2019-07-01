@@ -132,7 +132,7 @@ typedef enum MD_SPANTYPE {
     MD_SPAN_DEL,
 
     /* For recognizing inline ($) and display ($$) equations
-     * Note: Recognized only when MD_FLAG_LATEX is enabled
+     * Note: Recognized only when MD_FLAG_LATEX is enabled.
      */
     MD_SPAN_LATEX,
     MD_SPAN_LATEX_DISPLAY
