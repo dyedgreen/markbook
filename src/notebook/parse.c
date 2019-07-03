@@ -13,16 +13,22 @@
 /* Parse State */
 
 typedef struct ParseState {
-  char mask;       // bit mask with state
+  unsigned mask;   // bit mask with state
   int quote_depth; // How many quotes are open
-  sds indx_buf;    // buffer for storing strings to index
+  sds head_buf;    // Buffer for indexing headings
+  sds code_buf;    // Buffer for indexing code
+  sds eqn_buf;     // Buffer for indexing equations
   sds html;        // buffer for resulting html
+  int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/);
 } ParseState;
 
 // Bit mask values
-static char m_image_open = 1<<0;
-static char m_link_open  = 1<<1;
-static char m_quote_open = 1<<2;
+#define M_IMAGE_OPEN 0x0001
+#define M_QUOTE_OPEN 0x0002
+
+#define M_INDEX_HEAD 0x0004
+#define M_INDEX_CODE 0x0008
+#define M_INDEX_EQN  0x0010
 
 
 /* Render Helpers */
@@ -80,6 +86,37 @@ sds cat_img(sds html, void* detail) {
 }
 
 
+/* Index Helpers */
+
+// Open or close an index
+#define OPEN_INDEX(index_flag) (s->mask |= (index_flag))
+#define CLOSE_INDEX(index_flag) (s->mask = (s->mask | (index_flag)) ^ (index_flag))
+
+// Test if index is open
+#define IS_INDEX_OPEN(index_flag) (s->mask & (index_flag) && s->index_callback != NULL)
+
+// Call index function and clean up string after
+#define CALL_INDEX(index_flag) { \
+    if (s->index_callback == NULL) return 0; \
+    IndexType idx_t = 0; \
+    sds idx_buf = NULL; \
+    if ((index_flag) == M_INDEX_EQN) {\
+      idx_buf = s->eqn_buf; \
+      idx_t = IndexEquation; \
+    } else if ((index_flag) == M_INDEX_HEAD) { \
+      idx_buf = s->head_buf; \
+      idx_t = ((MD_BLOCK_H_DETAIL*) detail)->level; \
+    } else if ((index_flag) == M_INDEX_CODE) { \
+      idx_buf = s->code_buf; \
+      idx_t = IndexCode; \
+    } \
+    if (sdslen(idx_buf) == 0) return 0; \
+    int idx_res = s->index_callback(idx_t, (const char*)idx_buf, (size_t)sdslen(idx_buf)*sizeof(char)); \
+    sdsclear(idx_buf); \
+    return idx_res; \
+  }
+
+
 /* MD4C Callbacks */
 
 static int cb_enter_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
@@ -87,15 +124,16 @@ static int cb_enter_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
   ParseState* s = (ParseState*)userdata;
 
   // Ignore tags if an image is open
-  if (s->mask & m_image_open) {
+  if (s->mask & M_IMAGE_OPEN) {
     return 0;
   }
 
+  // Render
   switch(type) {
     case MD_BLOCK_DOC:      /* nothing */ break;
     case MD_BLOCK_QUOTE:
       s->html = sdscat(s->html, "<blockquote>");
-      s->mask |= m_quote_open;
+      s->mask |= M_QUOTE_OPEN;
       s->quote_depth ++;
       break;
     case MD_BLOCK_UL:       s->html = sdscat(s->html, "<ul>"); break;
@@ -108,24 +146,41 @@ static int cb_enter_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
     default:                /* nothing, we don't have tables or html blocks */ break;
   }
 
+  // Index
+  switch(type) {
+    case MD_BLOCK_H:
+      sdsclear(s->head_buf);
+      OPEN_INDEX(M_INDEX_HEAD);
+      break;
+    case MD_BLOCK_CODE:
+      sdsclear(s->code_buf);
+      OPEN_INDEX(M_INDEX_CODE);
+      break;
+    default:
+      /* no-op */
+      break;
+  }
+
   return 0;
 }
+
 static int cb_leave_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
 
   ParseState* s = (ParseState*)userdata;
 
   // Ignore tags if an image is open
-  if (s->mask & m_image_open) {
+  if (s->mask & M_IMAGE_OPEN) {
     return 0;
   }
 
+  // Render
   switch(type) {
     case MD_BLOCK_DOC:      /* nothing */ break;
     case MD_BLOCK_QUOTE:
       s->html = sdscat(s->html, "</blockquote>");
       s->quote_depth --;
       if (s->quote_depth == 0) {
-        s->mask ^= m_quote_open;
+        s->mask ^= M_QUOTE_OPEN;
       }
       break;
     case MD_BLOCK_UL:       s->html = sdscat(s->html, "</ul>"); break;
@@ -138,6 +193,21 @@ static int cb_leave_block(MD_BLOCKTYPE type, void* detail, void* userdata) {
     default:                /* nothing, we don't have tables or html blocks */ break;
   }
 
+  // Index
+  switch(type) {
+    case MD_BLOCK_H:
+      CALL_INDEX(M_INDEX_HEAD);
+      CLOSE_INDEX(M_INDEX_HEAD);
+      break;
+    case MD_BLOCK_CODE:
+      CALL_INDEX(M_INDEX_CODE);
+      CLOSE_INDEX(M_INDEX_CODE);
+      break;
+    default:
+      /* no-op */
+      break;
+  }
+
   return 0;
 }
 
@@ -146,10 +216,11 @@ static int cb_enter_span(MD_SPANTYPE type, void* detail, void* userdata) {
   ParseState* s = (ParseState*)userdata;
 
   // Ignore formatting inside an image
-  if (s->mask & m_image_open) {
+  if (s->mask & M_IMAGE_OPEN) {
     return 0;
   }
 
+  // Render
   switch(type) {
     case MD_SPAN_EM:            s->html = sdscat(s->html, "<em>"); break;
     case MD_SPAN_STRONG:        s->html = sdscat(s->html, "<strong>"); break;
@@ -158,23 +229,41 @@ static int cb_enter_span(MD_SPANTYPE type, void* detail, void* userdata) {
     case MD_SPAN_A:             s->html = cat_a(s->html, detail); break;
     case MD_SPAN_IMG:
       s->html = cat_img(s->html, detail);
-      s->mask |= m_image_open;
+      s->mask |= M_IMAGE_OPEN;
       break;
-    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "<equation type=\"display\">"); break;
     case MD_SPAN_LATEX:         s->html = sdscat(s->html, "<equation>"); break;
+    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "<equation type=\"display\">"); break;
+  }
+
+  // Index
+  switch(type) {
+    case MD_SPAN_LATEX:
+    case MD_SPAN_LATEX_DISPLAY:
+      sdsclear(s->eqn_buf);
+      OPEN_INDEX(M_INDEX_EQN);
+      break;
+    case MD_SPAN_CODE:
+      sdsclear(s->code_buf);
+      OPEN_INDEX(M_INDEX_CODE);
+      break;
+    default:
+      /* no-op */
+      break;
   }
 
   return 0;
 }
+
 static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
 
   ParseState* s = (ParseState*)userdata;
 
   // Ignore formatting inside an image
-  if (s->mask & m_image_open && type != MD_SPAN_IMG) {
+  if (s->mask & M_IMAGE_OPEN && type != MD_SPAN_IMG) {
     return 0;
   }
 
+  // Render
   switch(type) {
     case MD_SPAN_EM:            s->html = sdscat(s->html, "</em>"); break;
     case MD_SPAN_STRONG:        s->html = sdscat(s->html, "</strong>"); break;
@@ -183,10 +272,26 @@ static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
     case MD_SPAN_A:             s->html = sdscat(s->html, "</a>"); break;
     case MD_SPAN_IMG:
       s->html = sdscat(s->html, "\">");
-      s->mask ^= m_image_open;
+      s->mask ^= M_IMAGE_OPEN;
       break;
+    case MD_SPAN_LATEX:
+    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "</equation>"); break;
+  }
+
+  // Index
+  switch(type) {
+    case MD_SPAN_LATEX:
     case MD_SPAN_LATEX_DISPLAY:
-    case MD_SPAN_LATEX:         s->html = sdscat(s->html, "</equation>"); break;
+      CALL_INDEX(M_INDEX_EQN);
+      CLOSE_INDEX(M_INDEX_EQN);
+      break;
+    case MD_SPAN_CODE:
+      CALL_INDEX(M_INDEX_CODE);
+      CLOSE_INDEX(M_INDEX_CODE);
+      break;
+    default:
+      /* no-op */
+      break;
   }
 
   return 0;
@@ -196,7 +301,8 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
 
   ParseState* s = (ParseState*)userdata;
 
-  switch(type) {
+  // Render
+  switch (type) {
     case MD_TEXT_NORMAL:    /* fall through */
     case MD_TEXT_ENTITY:    /* fall through */
     case MD_TEXT_HTML:      /* fall through */
@@ -206,27 +312,40 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
     case MD_TEXT_SOFTBR:    s->html = sdscat(s->html, "\n"); break;
   }
 
+  // Index
+  if (IS_INDEX_OPEN(M_INDEX_CODE) && type == MD_TEXT_CODE) {
+    s->code_buf = sdscatlen(s->code_buf, text, size);
+  } else if (IS_INDEX_OPEN(M_INDEX_EQN) && type == MD_TEXT_CODE) {
+    s->eqn_buf = sdscatlen(s->eqn_buf, text, size);
+  } else if (IS_INDEX_OPEN(M_INDEX_HEAD)) {
+    switch (type) {
+      case MD_TEXT_NORMAL:  /* fall through */
+      case MD_TEXT_CODE:    s->head_buf = sdscatlen(s->head_buf, text, size); break;
+      case MD_TEXT_BR:      /* fall through */
+      case MD_TEXT_SOFTBR:  s->head_buf = sdscat(s->head_buf, " "); break;
+      default:              /* no-op */ break;
+    }
+  }
+
   return 0;
 }
 
 
 /* Public API */
 
-// Renders a given markdown text to html.
-// This will later also index the note and
-// add everything to the database, or maybe take
-// a callback for recording items to an index...
-// I think the second approach sounds better :)
-sds parse(const char* text) {
+// Renders a given markdown text to html,
+// emitting callbacks to the callback.
+sds parse(const char* text, int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/)) {
   // Parser state and md4c parser
   ParseState s = {
     0,
     0,
-    NULL,
-    NULL,
+    sdsempty(),
+    sdsempty(),
+    sdsempty(),
+    sdsempty(),
+    index_callback,
   };
-  s.indx_buf = sdsempty();
-  s.html = sdsempty();
 
   MD_PARSER parser = {
     0,
@@ -241,9 +360,19 @@ sds parse(const char* text) {
   };
 
   // All the really hard work
-  md_parse(text, strlen(text), &parser, (void*)&s);
+  if(md_parse(text, strlen(text), &parser, (void*)&s) != 0) {
+    sdsfree(s.html);
+    s.html = NULL;
+  }
 
   // Free temporary buffers and return result
-  sdsfree(s.indx_buf);
+  sdsfree(s.head_buf);
+  sdsfree(s.code_buf);
+  sdsfree(s.eqn_buf);
   return s.html;
+}
+
+// Convenience wrapper for parse.
+sds render_html(const char* text) {
+  return parse(text, NULL);
 }

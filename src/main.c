@@ -1,6 +1,11 @@
 #include <stdio.h>
 #include "notebook/parse.h"
 
+int indexer(IndexType type, const char* value, size_t size) {
+  printf("Indexed type %i: ;;%.*s;;\n", type, size, value);
+  return 0;
+}
+
 int main() {
   printf("Hello World! Let's parse something...\n\n");
 
@@ -8,10 +13,10 @@ int main() {
     "# Hello World\n"\
     "\n"\
     "This is some text *emph* **strong** *nested **strong** here*.\n"\
-    "in a paragraph.\n"\
+    "In a paragraph.\n"\
     "It contains    some [*links*](https://tilman.xyz)!\n"\
     "\n"\
-    "> # This is a\n"\
+    "> ## This is a quote header\n"\
     "> *quote*\n"\
     "> hello.\n"\
     "\n"\
@@ -35,12 +40,12 @@ int main() {
     "\n"\
     "![this *is* a description](https://tilman.xyz/assets/hero.png)\n"\
     "\n"\
-    "This is a new ~deleted here~ &amp; \\$\n"\
+    "This is a new ~deleted here~ &amp; with `code!!!` \\$\n"\
     "paragraph!\n"\
     "\n";
 
 
-  char* html = (char*)parse(markdown);
+  char* html = (char*)parse(markdown, indexer);
   printf("%s\n", html);
   sdsfree(html);
 
