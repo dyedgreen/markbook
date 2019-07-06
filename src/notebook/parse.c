@@ -7,7 +7,7 @@
   MD_FLAG_COLLAPSEWHITESPACE | \
   MD_FLAG_STRIKETHROUGH | \
   MD_FLAG_PERMISSIVEAUTOLINKS | \
-  MD_FLAG_LATEX)
+  MD_FLAG_LATEXMATHSPANS)
 
 
 /* Parse State */
@@ -231,14 +231,14 @@ static int cb_enter_span(MD_SPANTYPE type, void* detail, void* userdata) {
       s->html = cat_img(s->html, detail);
       s->mask |= M_IMAGE_OPEN;
       break;
-    case MD_SPAN_LATEX:         s->html = sdscat(s->html, "<equation>"); break;
-    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "<equation type=\"display\">"); break;
+    case MD_SPAN_LATEXMATH:         s->html = sdscat(s->html, "<equation>"); break;
+    case MD_SPAN_LATEXMATH_DISPLAY: s->html = sdscat(s->html, "<equation type=\"display\">"); break;
   }
 
   // Index
   switch(type) {
-    case MD_SPAN_LATEX:
-    case MD_SPAN_LATEX_DISPLAY:
+    case MD_SPAN_LATEXMATH:
+    case MD_SPAN_LATEXMATH_DISPLAY:
       sdsclear(s->eqn_buf);
       OPEN_INDEX(M_INDEX_EQN);
       break;
@@ -274,14 +274,14 @@ static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
       s->html = sdscat(s->html, "\">");
       s->mask ^= M_IMAGE_OPEN;
       break;
-    case MD_SPAN_LATEX:
-    case MD_SPAN_LATEX_DISPLAY: s->html = sdscat(s->html, "</equation>"); break;
+    case MD_SPAN_LATEXMATH:
+    case MD_SPAN_LATEXMATH_DISPLAY: s->html = sdscat(s->html, "</equation>"); break;
   }
 
   // Index
   switch(type) {
-    case MD_SPAN_LATEX:
-    case MD_SPAN_LATEX_DISPLAY:
+    case MD_SPAN_LATEXMATH:
+    case MD_SPAN_LATEXMATH_DISPLAY:
       CALL_INDEX(M_INDEX_EQN);
       CLOSE_INDEX(M_INDEX_EQN);
       break;
@@ -306,6 +306,7 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
     case MD_TEXT_NORMAL:    /* fall through */
     case MD_TEXT_ENTITY:    /* fall through */
     case MD_TEXT_HTML:      /* fall through */
+    case MD_TEXT_LATEXMATH: /* fall through */
     case MD_TEXT_CODE:      s->html = sdscatlen(s->html, text, size); break;
     case MD_TEXT_NULLCHAR:  /* nothing (breaking common mark compliance) */ break;
     case MD_TEXT_BR:        s->html = sdscat(s->html, "<br>"); break;
@@ -315,7 +316,7 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
   // Index
   if (IS_INDEX_OPEN(M_INDEX_CODE) && type == MD_TEXT_CODE) {
     s->code_buf = sdscatlen(s->code_buf, text, size);
-  } else if (IS_INDEX_OPEN(M_INDEX_EQN) && type == MD_TEXT_CODE) {
+  } else if (IS_INDEX_OPEN(M_INDEX_EQN) && type == MD_TEXT_LATEXMATH) {
     s->eqn_buf = sdscatlen(s->eqn_buf, text, size);
   } else if (IS_INDEX_OPEN(M_INDEX_HEAD)) {
     switch (type) {

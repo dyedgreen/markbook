@@ -2684,7 +2684,7 @@ md_build_mark_char_map(MD_CTX* ctx)
     if(ctx->parser.flags & MD_FLAG_STRIKETHROUGH)
         ctx->mark_char_map['~'] = 1;
 
-    if(ctx->parser.flags & MD_FLAG_LATEX)
+    if(ctx->parser.flags & MD_FLAG_LATEXMATHSPANS)
         ctx->mark_char_map['$'] = 1;
 
     if(ctx->parser.flags & MD_FLAG_PERMISSIVEEMAILAUTOLINKS)
@@ -3257,8 +3257,8 @@ md_collect_marks(MD_CTX* ctx, const MD_LINE* lines, int n_lines, int table_mode)
 
             /* A potential equation start/end */
             if(ch == _T('$')) {
-                // We can have at most two consecutive $ signs,
-                // where two dollar signs signify a display equation
+                /* We can have at most two consecutive $ signs,
+                 * where two dollar signs signify a display equation. */
                 OFF tmp = off+1;
 
                 while(tmp < line_end && CH(tmp) == _T('$'))
@@ -4028,10 +4028,10 @@ md_process_inlines(MD_CTX* ctx, const MD_LINE* lines, int n_lines)
 
                 case '$':
                     if(mark->flags & MD_MARK_OPENER) {
-                        MD_ENTER_SPAN((mark->end - off) % 2 ? MD_SPAN_LATEX : MD_SPAN_LATEX_DISPLAY, NULL);
-                        text_type = MD_TEXT_CODE; // LaTeX should be read as code
+                        MD_ENTER_SPAN((mark->end - off) % 2 ? MD_SPAN_LATEXMATH : MD_SPAN_LATEXMATH_DISPLAY, NULL);
+                        text_type = MD_TEXT_LATEXMATH;
                     } else {
-                        MD_LEAVE_SPAN((mark->end - off) % 2 ? MD_SPAN_LATEX : MD_SPAN_LATEX_DISPLAY, NULL);
+                        MD_LEAVE_SPAN((mark->end - off) % 2 ? MD_SPAN_LATEXMATH : MD_SPAN_LATEXMATH_DISPLAY, NULL);
                         text_type = MD_TEXT_NORMAL;
                     }
                     break;
@@ -4134,12 +4134,17 @@ md_process_inlines(MD_CTX* ctx, const MD_LINE* lines, int n_lines)
             if(off >= end)
                 break;
 
-            if(text_type == MD_TEXT_CODE) {
+            if(text_type == MD_TEXT_CODE || text_type == MD_TEXT_LATEXMATH) {
                 OFF tmp;
 
                 MD_ASSERT(prev_mark != NULL);
-                MD_ASSERT(prev_mark->ch == '`'  &&  (prev_mark->flags & MD_MARK_OPENER));
-                MD_ASSERT(mark->ch == '`'  &&  (mark->flags & MD_MARK_CLOSER));
+                if (text_type == MD_TEXT_CODE) {
+                    MD_ASSERT(prev_mark->ch == '`'  &&  (prev_mark->flags & MD_MARK_OPENER));
+                    MD_ASSERT(mark->ch == '`'  &&  (mark->flags & MD_MARK_CLOSER));
+                } else if (text_type == MD_TEXT_LATEXMATH) {
+                    MD_ASSERT(prev_mark->ch == '$'  &&  (prev_mark->flags & MD_MARK_OPENER));
+                    MD_ASSERT(mark->ch == '$'  &&  (mark->flags & MD_MARK_CLOSER));
+                }
 
                 /* Inside a code span, trailing line whitespace has to be
                  * outputted. */
@@ -4147,11 +4152,11 @@ md_process_inlines(MD_CTX* ctx, const MD_LINE* lines, int n_lines)
                 while(off < ctx->size  &&  ISBLANK(off))
                     off++;
                 if(off > tmp)
-                    MD_TEXT(MD_TEXT_CODE, STR(tmp), off-tmp);
+                    MD_TEXT(text_type, STR(tmp), off-tmp);
 
                 /* and new lines are transformed into single spaces. */
                 if(prev_mark->end < off  &&  off < mark->beg)
-                    MD_TEXT(MD_TEXT_CODE, _T(" "), 1);
+                    MD_TEXT(text_type, _T(" "), 1);
 
             } else if(text_type == MD_TEXT_HTML) {
                 /* Inside raw HTML, we output the new line verbatim, including
