@@ -11,6 +11,9 @@ int main() {
 
   const char* markdown = \
     "# Hello World\n"\
+    "A test: $a$$b$$ - $a$\n"\
+    "This is an equation: $a+b=c$\n"\
+    "This is $a$ a special symbol!\n"\
     "\n"\
     "This is some text *emph* **strong** *nested **strong** here*.\n"\
     "In a paragraph.\n"\
