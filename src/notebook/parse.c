@@ -19,7 +19,8 @@ typedef struct ParseState {
   sds code_buf;    // Buffer for indexing code
   sds eqn_buf;     // Buffer for indexing equations
   sds html;        // buffer for resulting html
-  int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/);
+  int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/, void* /*userdata*/);
+  void* userdata;  // Data supplied to index callback
 } ParseState;
 
 // Bit mask values
@@ -111,10 +112,10 @@ sds cat_img(sds html, void* detail) {
       idx_t = IndexCode; \
     } \
     if (sdslen(idx_buf) == 0) return 0; \
-    int idx_res = s->index_callback(idx_t, (const char*)idx_buf, (size_t)sdslen(idx_buf)*sizeof(char)); \
+    int idx_res = s->index_callback(idx_t, (const char*)idx_buf, (size_t)sdslen(idx_buf)*sizeof(char), s->userdata); \
     sdsclear(idx_buf); \
     return idx_res; \
-  }
+  } while(0)
 
 
 /* MD4C Callbacks */
@@ -336,7 +337,10 @@ static int cb_text(MD_TEXTTYPE type, const MD_CHAR* text, MD_SIZE size, void* us
 
 // Renders a given markdown text to html,
 // emitting callbacks to the callback.
-sds parse(const char* text, int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/)) {
+sds parse(
+  const char* text,
+  int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/, void* /*userdata*/),
+  void* userdata) {
   // Parser state and md4c parser
   ParseState s = {
     0,
@@ -346,6 +350,7 @@ sds parse(const char* text, int (*index_callback)(IndexType /*type*/, const char
     sdsempty(),
     sdsempty(),
     index_callback,
+    userdata,
   };
 
   MD_PARSER parser = {
@@ -375,5 +380,5 @@ sds parse(const char* text, int (*index_callback)(IndexType /*type*/, const char
 
 // Convenience wrapper for parse.
 sds render_html(const char* text) {
-  return parse(text, NULL);
+  return parse(text, NULL, NULL);
 }

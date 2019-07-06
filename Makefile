@@ -2,7 +2,7 @@
 
 CC = gcc
 INC = -Isrc -Ilib
-FLG = -g -std=c99 -O3 -Wall -Wextra -pedantic
+FLG = -g -std=c99 -O3 -Wall -Wextra -pedantic -Wunicode-whitespace
 BIN = bin/markbook
 
 SRC = $(shell find . -name *.c)
@@ -17,6 +17,7 @@ app: $(BIN)
 	echo "TODO: Create macOS .app bundle"
 
 $(BIN): $(OBJ)
+$(BIN): $(HEADERS)
 	$(CC) $(OBJ) -o $(BIN)
 
 $(OBJ): %.o: %.c

@@ -18,7 +18,10 @@ typedef enum IndexType {
 //
 // If the callback returns a positive, non-zero integer, the parsing is aborted
 // and a null pointer is returned.
-sds parse(const char* text, int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/));
+sds parse(
+  const char* text,
+  int (*index_callback)(IndexType /*type*/, const char* /*value*/, size_t /*size*/, void* /* userdata */),
+  void* userdata);
 
 // Convenience wrapper that only emits html
 sds render_html(const char* text);

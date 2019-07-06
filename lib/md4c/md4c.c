@@ -4141,7 +4141,7 @@ md_process_inlines(MD_CTX* ctx, const MD_LINE* lines, int n_lines)
                 if (text_type == MD_TEXT_CODE) {
                     MD_ASSERT(prev_mark->ch == '`'  &&  (prev_mark->flags & MD_MARK_OPENER));
                     MD_ASSERT(mark->ch == '`'  &&  (mark->flags & MD_MARK_CLOSER));
-                } else if (text_type == MD_TEXT_LATEXMATH) {
+                } else if (text_type == MD_TEXT_LATEXMATH) {
                     MD_ASSERT(prev_mark->ch == '$'  &&  (prev_mark->flags & MD_MARK_OPENER));
                     MD_ASSERT(mark->ch == '$'  &&  (mark->flags & MD_MARK_CLOSER));
                 }

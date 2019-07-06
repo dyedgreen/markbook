@@ -5,3 +5,6 @@
 bin/*
 !bin/.gitkeep
 *.o
+
+# Test notebook
+test
