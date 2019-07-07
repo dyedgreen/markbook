@@ -3,10 +3,10 @@
 #include "notebook.h"
 
 
-int index_file(Notebook* nb, const char* file);
-int index_if_outdated(Notebook* nb, const char* file);
+int nb_index_file(Notebook* nb, const char* file);
+int nb_index_if_outdated(Notebook* nb, const char* file);
 
-int index(Notebook* nb);
+int nb_index(Notebook* nb);
 
 // TODO:
 // index_file

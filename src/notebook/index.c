@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/stat.h>
+#include <dirent.h>
+#include <string.h>
 #include "parse.h"
 #include "sql.h"
 #include "index.h"
@@ -12,7 +14,8 @@ typedef struct IndexData {
   int note_id;
 } IndexData;
 
-int index_callback(IndexType type, const char* value, size_t size, void* userdata) {
+// Helper function, callback for indexing operation
+int h_index_callback(IndexType type, const char* value, size_t size, void* userdata) {
   IndexData* dt = (IndexData*) userdata;
   sqlite3_stmt* query;
   // TODO: Handle errors (?)
@@ -25,10 +28,9 @@ int index_callback(IndexType type, const char* value, size_t size, void* userdat
   return 0;
 }
 
-
 // Adds or updates the index for a file in
 // the markbook database
-int index_file(Notebook* nb, const char* file) {
+int nb_index_file(Notebook* nb, const char* file) {
   // Variables that are cleaned up at the end
   int succ = 0;
   FILE* doc;
@@ -67,7 +69,7 @@ int index_file(Notebook* nb, const char* file) {
   sqlite3_finalize(query);
 
   // Call index callback
-  html = parse(contents, index_callback, &dt);
+  html = parse(contents, h_index_callback, &dt);
 
   // Update note data and set note to ready
   if (SQLITE_OK != sqlite3_prepare_v2(nb->index_db, NB_SQL_NOTE_FINISH, -1, &query, NULL)) goto abort;
@@ -91,7 +93,7 @@ int index_file(Notebook* nb, const char* file) {
 
 // Updates index if the index is not present in the
 // database or if it is outdated.
-int index_if_outdated(Notebook* nb, const char* file) {
+int nb_index_if_outdated(Notebook* nb, const char* file) {
   // Acquire last updated from index
   sqlite3_stmt* query;
   int updated = 0;
@@ -107,13 +109,54 @@ int index_if_outdated(Notebook* nb, const char* file) {
   struct stat attr;
   stat(file_path, &attr);
   free(file_path);
-  printf("db: %i file: %li\n", updated, attr.st_mtime);
-  if (attr.st_mtime > updated) return index_file(nb, file);
+  if (attr.st_mtime > updated) return nb_index_file(nb, file);
   return 1;
+}
+
+// Helper function, recursively index directory
+void h_index_rec(Notebook* nb, const char* dir) {
+  DIR* d = opendir(dir);
+  if (d == NULL) return;
+
+  struct dirent* entry;
+  struct stat attr;
+  sds path_buf = sdscat(sdsnew(dir), "/");
+  int buf_base_len = sdslen(path_buf);
+  int root_len = strlen(nb->root) + 1; // including '/'
+
+  while((entry = readdir(d))) {
+    // Ignore system files
+    if (entry->d_name[0] == '.') continue;
+    path_buf = sdscat(path_buf, entry->d_name);
+
+    stat(path_buf, &attr);
+
+    // Descend into folders
+    if (S_ISDIR(attr.st_mode)) {
+      h_index_rec(nb, path_buf);
+    }
+
+    // Index markdown files
+    if (
+      S_ISREG(attr.st_mode) &&
+      sdslen(path_buf) >= 4 &&
+      path_buf[sdslen(path_buf) - 3] == '.' &&
+      path_buf[sdslen(path_buf) - 2] == 'm' &&
+      path_buf[sdslen(path_buf) - 1] == 'd'
+    ) {
+      nb_index_if_outdated(nb, &path_buf[root_len]);
+    }
+
+    // Reset buffer
+    sdssetlen(path_buf, buf_base_len);
+  }
+
+  sdsfree(path_buf);
 }
 
 // Walk the directory and index any markdown files
 // found inside by calling index_if_outdated.
-int index(Notebook* nb) {
-  
+int nb_index(Notebook* nb) {
+  h_index_rec(nb, nb->root);
+  return 1; // TODO: Implement error checking
 }
