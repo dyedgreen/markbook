@@ -24,6 +24,9 @@
 #define NB_SQL_NOTE_ID ""\
   "SELECT id FROM notes WHERE file = ?;"
 
+#define NB_SQL_NOTE_UPDATED ""\
+  "SELECT updated FROM notes WHERE file = ?;"
+
 #define NB_SQL_NOTE_FINISH ""\
   "UPDATE notes SET ready = ?, updated = ?, html = ? WHERE id = ?;"
 

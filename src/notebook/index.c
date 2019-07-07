@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
+#include <sys/stat.h>
 #include "parse.h"
 #include "sql.h"
 #include "index.h"
@@ -14,6 +15,7 @@ typedef struct IndexData {
 int index_callback(IndexType type, const char* value, size_t size, void* userdata) {
   IndexData* dt = (IndexData*) userdata;
   sqlite3_stmt* query;
+  // TODO: Handle errors (?)
   sqlite3_prepare_v2(dt->nb->index_db, NB_SQL_INSERT_SEARCH, -1, &query, NULL);
   sqlite3_bind_int(query, 1, dt->note_id);
   sqlite3_bind_int(query, 2, type);
@@ -85,4 +87,33 @@ int index_file(Notebook* nb, const char* file) {
   if (contents != NULL) free(contents);
   sdsfree(html);
   return succ;
+}
+
+// Updates index if the index is not present in the
+// database or if it is outdated.
+int index_if_outdated(Notebook* nb, const char* file) {
+  // Acquire last updated from index
+  sqlite3_stmt* query;
+  int updated = 0;
+  if (SQLITE_OK != sqlite3_prepare_v2(nb->index_db, NB_SQL_NOTE_UPDATED, -1, &query, NULL)) return 0;
+  if (SQLITE_OK != sqlite3_bind_text(query, 1, file, -1, NULL)) return 0;
+  if (SQLITE_ROW == sqlite3_step(query)) {
+    updated = sqlite3_column_int(query, 0);
+  }
+  sqlite3_finalize(query);
+
+  // Load last updated from file and updated if newer than index
+  char* file_path = nb_file_path(nb, file);
+  struct stat attr;
+  stat(file_path, &attr);
+  free(file_path);
+  printf("db: %i file: %li\n", updated, attr.st_mtime);
+  if (attr.st_mtime > updated) return index_file(nb, file);
+  return 1;
+}
+
+// Walk the directory and index any markdown files
+// found inside by calling index_if_outdated.
+int index(Notebook* nb) {
+  
 }

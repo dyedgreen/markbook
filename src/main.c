@@ -17,7 +17,7 @@ int main(int argc, const char** argv) {
   }
 
   // Index a file
-  if (!index_file(nb, "hello-world.md")) {
+  if (!index_if_outdated(nb, "hello-world.md")) {
     printf("index failed\n");
   }
 
