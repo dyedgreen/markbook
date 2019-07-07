@@ -9,3 +9,6 @@
 // Entry point for thread handling indexing of
 // files in directory.
 void* thread_indexer(void* notebook);
+
+// Entry point for the ui thread
+void* thread_ui(void* view);
