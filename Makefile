@@ -20,6 +20,7 @@ endif
 
 SRC = $(shell find . -name *.c)
 OBJ = $(SRC:%.c=%.o)
+UI_BUNDLE = ui/build/bundle.o
 
 
 # Targets
@@ -30,13 +31,13 @@ app: $(BIN)
 	echo "TODO: Create macOS .app bundle"
 
 $(BIN): $(OBJ)
-$(BIN): ui
-	$(CC) $(OBJ) $(WEBVIEW_LDFLAGS) -o $(BIN)
+$(BIN): $(UI_BUNDLE)
+	$(CC) $(OBJ) $(UI_BUNDLE) $(WEBVIEW_LDFLAGS) -o $(BIN)
 
 $(OBJ): %.o: %.c
 	$(CC) $< $(INC) $(FLG) $(WEBVIEW_CFLAGS) -c -o $@
 
-ui:
+$(UI_BUNDLE):
 	make -C ui
 
 # Functions
@@ -45,7 +46,6 @@ run: all
 	bin/markbook
 
 clean:
-	rm -r bin/* || echo "(skipping bin)"
-	rm $(shell find . -name *.o)
+	rm bin/* $(shell find . -name *.o)
 
-.PHONY: ui run clean
+.PHONY: $(UI_BUNDLE) run clean

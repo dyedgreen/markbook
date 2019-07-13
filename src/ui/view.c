@@ -4,6 +4,13 @@
 #define WEBVIEW_IMPLEMENTATION
 #include "view.h"
 
+// Message handler callback
+void message_callback(struct webview* webview, void* arg) {
+  printf("Message: %s\n", arg);
+  if (((char*)arg)[0] != 'b')
+    webview_eval(webview, "window.external.c_response_handle('Hello!');");
+}
+
 // Constructor and destructor methods
 View* view_init() {
   View* view = malloc(sizeof(View));
@@ -18,8 +25,7 @@ View* view_init() {
 
   webview_init(&view->webview);
   webview_set_color(&view->webview, 255, 255, 255, 255);
-
-  // webview.external_invoke_cb = *callback; TODO: Implement messaging protocol
+  view->webview.external_invoke_cb = *message_callback;
 
   // Set notebook placeholder.
   // This is populated with the

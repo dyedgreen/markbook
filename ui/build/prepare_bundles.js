@@ -4,8 +4,9 @@
 const fs = require("fs");
 
 
-const template = fs.readFileSync(__dirname.concat("/bundle.h.txt"), {encoding:"utf8"});
-const target = __dirname.concat("/bundle.h");
+const target = __dirname.concat("/bundle.");
+const target_js = target.concat("js");
+const target_css = target.concat("css");
 
 // Load JS bundle
 let js_bundle = fs.readFileSync(__dirname.concat("/bundle.js"), {encoding:"utf8"});
@@ -22,13 +23,12 @@ css_bundle = css_bundle.replace(/;( |\n)+/g, ";");
 css_bundle = css_bundle.replace(/: +/g, ":");
 css_bundle = css_bundle.replace(/{( |\n)+/g, "{");
 css_bundle = css_bundle.replace(/}( |\n)+/g, "}");
+css_bundle = css_bundle.replace(/^( |\n)+/, "");
 
-fs.writeFileSync(target, template.replace(
-  "{js_bundle}", js_bundle.replace(
-    /\"/g, "\\\"").replace(
-    /\n/g, "\\n"
-)).replace(
-  "{css_bundle}", css_bundle.replace(
-    /\"/g, "\\\"").replace(
-    /\n/g, "\\n"
-)));
+// Append NULL characters
+js_bundle = js_bundle.concat("\0");
+css_bundle = css_bundle.concat("\0");
+
+// Write resulting files
+fs.writeFileSync(target_js, js_bundle, {encoding:"utf8"});
+fs.writeFileSync(target_css, css_bundle, {encoding:"utf8"});

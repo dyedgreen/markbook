@@ -1,17 +1,22 @@
 ROLLUP = ./node_modules/rollup/bin/rollup
 NODE = node
+NASM = nasm
 
 RED = \033[0;31m
 NC = \033[0m # No Color
-MSG = Run 'make npm' to install build dependencies.
+MSG_NPM = Run 'make npm' to install build dependencies. (Requires Node.JS)
+MSG_ASM = Please install the nasm assebler to generate required object files.
 
 
-bundle:
+bundle: $(SRC)
 	$(ROLLUP) --config build/rollup.config.js || echo "\n\n${RED}${MSG}${NC}\n\n"
-	$(NODE) build/gen_header.js
-	touch ../src/ui/view.c # To recompile with new bundle
+	$(NODE) build/prepare_bundles.js
+	$(NASM) -fmacho64 build/bundle.asm -o build/bundle.o || echo "\n\n${RED}${MSG_ASM}${NC}\n\n"
 
 npm:
 	npm install
 
-.PHONY: bundle npm
+clean:
+	rm build/bundle.o build/bundle.js build/bundle.css
+
+.PHONY: bundle clean npm
