@@ -7,7 +7,7 @@
 #define APP_TITLE "Markbook"
 #define APP_DEBUG 1
 #define APP_DEFAULT_WIDTH 600
-#define APP_DEFAULT_HEIGHT 800
+#define APP_DEFAULT_HEIGHT 650
 
 
 typedef struct View {

@@ -40,3 +40,5 @@ $(OBJ): %.o: %.c
 clean:
 	rm -r bin/* || echo "(skipping bin)"
 	rm $(shell find . -name *.o)
+
+.PHONY: clean

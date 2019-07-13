@@ -37,7 +37,6 @@ void view_exit(View* view) {
 
 void view_run(View* view) {
   while (webview_loop(&view->webview, 0) == 0) {
-
     // Acquire the folder to view from user
     if (view->nb == NULL) {
       char* nb_folder = malloc(sizeof(char)*2024);

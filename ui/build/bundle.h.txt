@@ -1,0 +1,9 @@
+#pragma once
+
+// JavaScript bundle
+const char* js_bundle = "{js_bundle}";
+
+// CSS bundle
+const char* css_bundle = "{css_bundle}";
+
+// We use the minimal (default) HTML that comes with webview.h

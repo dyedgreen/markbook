@@ -6,5 +6,10 @@ bin/*
 !bin/.gitkeep
 *.o
 
+# NPM is gross **pukes**
+ui/node_modules
+ui/build/bundle.js
+ui/build/bundle.h
+
 # Test notebook
 test
