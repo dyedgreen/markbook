@@ -1,19 +1,39 @@
 #include <unistd.h>
-#include "app/entry_points.h"
+#include "workers/entry_points.h"
 #include "bundle.h"
 #define WEBVIEW_IMPLEMENTATION
 #include "view.h"
+#include "message.h" // TODO: Fix ifdef in webview so I can have these in the proper order
+
+
+// Currently, because of they way the webview callbacks work,
+// we can only support a single queue :(
+// (This is okay for now, since we only need a single window.)
+MessageQueue* global_message_queue = NULL;
 
 // Message handler callback
 void message_callback(struct webview* webview, void* arg) {
-  printf("Message: %s\n", arg);
-  if (((char*)arg)[0] != 'b')
-    webview_eval(webview, "window.external.c_response_handle('Hello!');");
+  message_digest_fragment(global_message_queue, (char*)arg);
+  // We are not responsible for the arg pointer
 }
 
+
 // Constructor and destructor methods
-View* view_init() {
+View* view_init(Notebook* nb) {
+  // If the message queue is taken, there is nothing we can do
+  if (global_message_queue != NULL)
+    return NULL;
+
   View* view = malloc(sizeof(View));
+  if (view == NULL)
+    return NULL;
+
+  // Init message queue
+  global_message_queue = message_init_queue(&view->webview);
+  if (global_message_queue == NULL) {
+    free(view);
+    return NULL;
+  }
 
   // Configure window
   view->webview.title = APP_TITLE;
@@ -27,17 +47,18 @@ View* view_init() {
   webview_set_color(&view->webview, 255, 255, 255, 255);
   view->webview.external_invoke_cb = *message_callback;
 
-  // Set notebook placeholder.
-  // This is populated with the
-  // notebook path chosen by the
-  // user when the ui is run.
-  view->nb = NULL;
+  // Set notebook. This may be
+  // a NULL pointer, in which
+  // case the user will be prompted
+  // to select a notebook.
+  view->nb = nb;
 
   return view;
 }
 
 void view_exit(View* view) {
   if (view == NULL) return;
+  close_message_queue(global_message_queue);
   // Webview exit kills the thread it runs in...
   close_notebook(view->nb);
   free(view);
@@ -69,11 +90,12 @@ void view_run(View* view) {
   webview_inject_css(&view->webview, css_bundle);
   webview_eval(&view->webview, js_bundle);
 
-  while (webview_loop(&view->webview, 0) == 0) {
+  while (webview_loop(&view->webview, 1) == 0) {
     // Go easy on the CPU
     usleep(10000);
 
     // TODO: Should messages be handled in the ui thread
     //       or should they be handled in a separate thread?
+    message_respond(global_message_queue);
   }
 }

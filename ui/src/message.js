@@ -53,6 +53,6 @@ export function list_notes(callback) {
 
 // Retrieve the rendered HTML for a given note
 export function get_note(note, callback) {
-  if (typeof note !=== "string") throw "No note given.";
+  if (typeof note !== "string") throw "No note given.";
   send_message(callback, types.get("get_note"), note);
 }

@@ -18,7 +18,9 @@ typedef struct View {
 } View;
 
 // Constructor and destructor methods
-View* view_init();
+// If a notebook is provided, the view takes
+// ownership of the pointer.
+View* view_init(Notebook* nb);
 void view_exit(View* view);
 
 // Start view loop. Returns when view exists.
