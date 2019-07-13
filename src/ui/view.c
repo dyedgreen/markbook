@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include "app/entry_points.h"
+#include "bundle.h"
 #define WEBVIEW_IMPLEMENTATION
 #include "view.h"
 
@@ -9,7 +10,7 @@ View* view_init() {
 
   // Configure window
   view->webview.title = APP_TITLE;
-  view->webview.url = "https://tilman.xyz"; // FIXME!
+  view->webview.url = html_bundle;
   view->webview.width = APP_DEFAULT_WIDTH;
   view->webview.height = APP_DEFAULT_HEIGHT;
   view->webview.debug = APP_DEBUG;
@@ -17,6 +18,7 @@ View* view_init() {
 
   webview_init(&view->webview);
   webview_set_color(&view->webview, 255, 255, 255, 255);
+
   // webview.external_invoke_cb = *callback; TODO: Implement messaging protocol
 
   // Set notebook placeholder.
@@ -36,27 +38,32 @@ void view_exit(View* view) {
 }
 
 void view_run(View* view) {
-  while (webview_loop(&view->webview, 0) == 0) {
-    // Acquire the folder to view from user
-    if (view->nb == NULL) {
-      char* nb_folder = malloc(sizeof(char)*2024);
-      webview_dialog(
-        &view->webview,
-        WEBVIEW_DIALOG_TYPE_OPEN,
-        WEBVIEW_DIALOG_FLAG_DIRECTORY,
-        "Open Notebook",
-        "Please select a folder containing your markdown notes.",
-        nb_folder, sizeof(char)*2024);
-      view->nb = open_notebook(nb_folder);
-      free(nb_folder);
-      if (view->nb == NULL || pthread_create(&view->index_thread, NULL, thread_indexer, view->nb) != 0) {
-        // Abort
-        close_notebook(view->nb);
-        webview_exit(&view->webview);
-        return;
-      }
+  // Acquire the folder to view from user
+  if (view->nb == NULL) {
+    char* nb_folder = malloc(sizeof(char)*2024);
+    webview_dialog(
+      &view->webview,
+      WEBVIEW_DIALOG_TYPE_OPEN,
+      WEBVIEW_DIALOG_FLAG_DIRECTORY,
+      "Open Notebook",
+      "Please select a folder containing your markdown notes.",
+      nb_folder, sizeof(char)*2024);
+    view->nb = open_notebook(nb_folder);
+    free(nb_folder);
+    if (view->nb == NULL || pthread_create(&view->index_thread, NULL, thread_indexer, view->nb) != 0) {
+      // Abort
+      close_notebook(view->nb);
+      webview_exit(&view->webview);
+      return;
     }
+  }
 
+  // Load ui bundle
+  webview_loop(&view->webview, 0);
+  webview_inject_css(&view->webview, css_bundle);
+  webview_eval(&view->webview, js_bundle);
+
+  while (webview_loop(&view->webview, 0) == 0) {
     // Go easy on the CPU
     usleep(10000);
 

@@ -1,7 +1,7 @@
 # Environment and config
 
 CC = gcc
-INC = -Isrc -Ilib
+INC = -Isrc -Ilib -Iui/build
 FLG = -g -std=c99 -O3 -Wall -Wextra -pedantic -Wunicode-whitespace
 BIN = bin/markbook
 
@@ -30,15 +30,22 @@ app: $(BIN)
 	echo "TODO: Create macOS .app bundle"
 
 $(BIN): $(OBJ)
-$(BIN): $(HEADERS)
+$(BIN): ui
 	$(CC) $(OBJ) $(WEBVIEW_LDFLAGS) -o $(BIN)
 
 $(OBJ): %.o: %.c
 	$(CC) $< $(INC) $(FLG) $(WEBVIEW_CFLAGS) -c -o $@
 
+ui:
+	make -C ui
+
+# Functions
+
+run: all
+	bin/markbook
 
 clean:
 	rm -r bin/* || echo "(skipping bin)"
 	rm $(shell find . -name *.o)
 
-.PHONY: clean
+.PHONY: ui run clean

@@ -1,0 +1,7 @@
+/* Base CSS styles */
+
+html, body {
+  font-family: -apple-system;
+  color: #000;
+  background: #fff;
+}

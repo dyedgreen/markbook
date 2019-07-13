@@ -1,22 +1,8 @@
-// Hello World (I guess)
-import {hello} from './world';
-import 'preact';
+import {h, render} from 'preact';
 
-class Greet {
-
-  constructor(name) {
-    this.name = "".concat(name);
-  }
-
-  hello() {
-    hello(this.name);
-  }
-
-}
-
-const my_greet = new Greet("Carolina, I love you");
-my_greet.hello();
-
-import { h, render } from 'preact';
-
-render((h("h1", {}, "Hello World!")), document.body);
+render((
+    <div id="foo">
+        <span>Hello, world!</span>
+        <button onClick={ e => alert("hi!") }>Click Me</button>
+    </div>
+), document.body);

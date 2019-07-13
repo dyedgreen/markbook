@@ -6,4 +6,10 @@ const char* js_bundle = "{js_bundle}";
 // CSS bundle
 const char* css_bundle = "{css_bundle}";
 
-// We use the minimal (default) HTML that comes with webview.h
+// We use a slightly modified version of the default HTML that comes with webview.h
+const char* html_bundle =                                                      \
+  "data:text/"                                                                 \
+  "html,%3C%21DOCTYPE%20html%3E%0A%3Chtml%20lang=%22en%22%3E%0A%3Chead%3E%"    \
+  "3Cmeta%20charset=%22utf-8%22%3E%3Cmeta%20http-equiv=%22X-UA-Compatible%22%" \
+  "20content=%22IE=edge%22%3E%3C%2Fhead%3E%0A%3Cbody%3E%3C%2Fbody%3E%0A%3C%2F" \
+  "html%3E";

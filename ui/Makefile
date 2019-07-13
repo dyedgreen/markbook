@@ -1,4 +1,3 @@
-BABEL = ./node_modules/@babel/cli/bin/babel.js
 ROLLUP = ./node_modules/rollup/bin/rollup
 NODE = node
 
@@ -9,8 +8,8 @@ MSG = Run 'make npm' to install build dependencies.
 
 bundle:
 	$(ROLLUP) --config build/rollup.config.js || echo "\n\n${RED}${MSG}${NC}\n\n"
-	$(BABEL) build/bundle.js -o build/bundle.js
 	$(NODE) build/gen_header.js
+	touch ../src/ui/view.c # To recompile with new bundle
 
 npm:
 	npm install

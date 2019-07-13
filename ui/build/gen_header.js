@@ -4,10 +4,11 @@
 const fs = require("fs");
 
 
-// Load JS bundle
 const template = fs.readFileSync(__dirname.concat("/bundle.h.txt"), {encoding:"utf8"});
-const js_bundle = fs.readFileSync(__dirname.concat("/bundle.js"), {encoding:"utf8"});
 const target = __dirname.concat("/bundle.h");
+
+// Load JS bundle
+let js_bundle = fs.readFileSync(__dirname.concat("/bundle.js"), {encoding:"utf8"});
 
 // Load CSS bundle
 let css_bundle = "";
