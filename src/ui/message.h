@@ -2,15 +2,18 @@
 
 #include "sds/sds.h"
 #include "webview.h"
+#include "notebook/notebook.h"
 
-#define MESSAGE_TYPE_LIST_NOTES 'a'
-#define MESSAGE_TYPE_GET_NOTE   'b'
-#define MESSAGE_TYPE_SEARCH     'c'
+#define MESSAGE_TYPE_LIST_NOTES   'a'
+#define MESSAGE_TYPE_GET_NOTE     'b'
+#define MESSAGE_TYPE_SEARCH       'c'
+#define MESSAGE_TYPE_UPDATE_NOTES 'd'
 
 typedef enum {
   MessageTypeListNotes,
   MessageTypeGetNote,
   MessageTypeSearch,
+  MessageTypeUpdateNotes, // TODO: Notify JS when notes update
   MessageTypeUnknown,
 } MessageType;
 
@@ -25,6 +28,7 @@ typedef struct MessageQueue {
   MessageContext* current;  // Currently being assembled
   MessageContext* first;    // Next to be processed
   struct webview* webview;  // Webview used for responding to messages
+  Notebook* nb;             // Notebook used for fulfilling queries
 } MessageQueue;
 
 // Initialize a new message queue

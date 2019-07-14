@@ -77,3 +77,24 @@ int nb_note_id(Notebook* nb, const char* file) {
   sqlite3_finalize(query);
   return id;
 }
+
+// Returns newline separated list of file names
+// The returned pointer is owned by the caller.
+sds nb_api_list_notes(Notebook* nb) {
+  sqlite3_stmt* query;
+  if (SQLITE_OK != sqlite3_prepare_v2(nb->index_db, NB_SQL_LIST_NOTES, -1, &query, NULL)) return NULL;
+
+  sds list = sdsempty();
+  while (SQLITE_ROW == sqlite3_step(query)) {
+    if (sdslen(list) > 0)
+      list = sdscat(list, "\n");
+    list = sdscat(list, sqlite3_column_text(query, 0));
+  }
+  sqlite3_finalize(query);
+  return list;
+}
+
+// Returns rendered HTML
+sds nb_api_get_note(Notebook* nb, const char* file) {
+  return NULL; // TODO
+}

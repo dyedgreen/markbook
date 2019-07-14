@@ -1,3 +1,4 @@
+#include "debug.h"
 #include "message.h"
 
 
@@ -23,6 +24,14 @@ MessageContext* pop_first(MessageQueue* queue) {
   return ctx;
 }
 
+// Send a message to JS
+void send_message(MessageQueue* queue, const char* msg) {
+  sds js_command = sdsempty();
+  js_command = sdscatfmt(js_command, "window.external.c_response_handle(`%s`);", msg);
+  webview_eval(queue->webview, js_command);
+  sdsfree(js_command);
+}
+
 // Obtain a fresh context
 MessageContext* empty_context(char type) {
   MessageContext* ctx = malloc(sizeof(MessageContext));
@@ -43,6 +52,7 @@ MessageContext* empty_context(char type) {
   return ctx;
 }
 
+// Free a context and it's detail data
 void destroy_context(MessageContext* ctx) {
   // The detail field is not allowed to contain pointers owned by the queue
   // so we may free it here
@@ -63,6 +73,7 @@ MessageQueue* message_init_queue(struct webview* webview) {
   queue->current = NULL;
   queue->first = NULL;
   queue->webview = webview;
+  queue->nb = NULL;
   return queue;
 }
 
@@ -110,13 +121,18 @@ void message_respond(MessageQueue* queue) {
   if (ctx != NULL) {
     switch (ctx->type) {
       case MessageTypeListNotes:
-        printf("Wanted to list notes.\n");
+        DEBUG_PRINT("Wanted to list notes.\n");
+        if (queue->nb != NULL) {
+          sds note_list = nb_api_list_notes(queue->nb);
+          send_message(queue, note_list);
+          sdsfree(note_list);
+        }
         break;
       case MessageTypeGetNote:
-        printf("Wanted to get note: %s.\n", ctx->detail);
+        DEBUG_PRINT("Wanted to get note: %s.\n", ctx->detail);
         break;
       case MessageTypeSearch:
-        printf("Wanted to search for query: %s.\n", ctx->detail);
+        DEBUG_PRINT("Wanted to search for query: %s.\n", ctx->detail);
         break;
       default:
         // Message not recognized

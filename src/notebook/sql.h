@@ -35,3 +35,9 @@
 
 #define NB_SQL_PURGE_SEARCH ""\
   "DELETE FROM search WHERE note = ?"
+
+#define NB_SQL_LIST_NOTES ""\
+  "SELECT file FROM notes WHERE ready = 1;"
+
+#define NB_SQL_GET_NOTE ""\
+  "SELECT html FROM notes WHERE file = ? LIMIT 1;"

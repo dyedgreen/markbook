@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sqlite/sqlite3.h"
+#include "sds/sds.h"
 
 typedef struct Notebook {
   sqlite3* index_db; // Connection to (root)/.markbook
@@ -13,5 +14,11 @@ void close_notebook(Notebook* nb);
 char* nb_file_path(Notebook* nb, const char* file);
 int nb_note_id(Notebook* nb, const char* file);
 
-// int reindex_notebook(Notebook* nb); (should refresh index for each file if outdated...)
-// TODO: search, retrieve item, retrieve item list, etc...
+// API for consumption by JS part
+
+// Returns newline separated list of file names
+sds nb_api_list_notes(Notebook* nb);
+// Returns rendered HTML
+sds nb_api_get_note(Notebook* nb, const char* file);
+// Returns search results
+// TODO (!)

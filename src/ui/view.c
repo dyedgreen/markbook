@@ -52,6 +52,8 @@ View* view_init(Notebook* nb) {
   // case the user will be prompted
   // to select a notebook.
   view->nb = nb;
+  if (nb != NULL)
+    global_message_queue->nb = nb;
 
   return view;
 }
@@ -83,6 +85,8 @@ void view_run(View* view) {
       webview_exit(&view->webview);
       return;
     }
+    // Register notebook with message queue
+    global_message_queue->nb = view->nb;
   }
 
   // Load ui bundle

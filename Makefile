@@ -3,6 +3,7 @@
 CC = gcc
 INC = -Isrc -Ilib -Iui/build
 FLG = -g -std=c99 -O3 -Wall -Wextra -pedantic -Wunicode-whitespace
+DEF = -DDEBUG # TODO: Think about having a nice target that disables this
 BIN = bin/markbook
 
 TARGET_OS ?= $(OS)
@@ -29,13 +30,14 @@ all: $(BIN)
 
 app: $(BIN)
 	echo "TODO: Create macOS .app bundle"
+	echo "TODO: Disable DEBUG output"
 
 $(BIN): $(OBJ)
 $(BIN): $(UI_BUNDLE)
 	$(CC) $(OBJ) $(UI_BUNDLE) $(WEBVIEW_LDFLAGS) -o $(BIN)
 
 $(OBJ): %.o: %.c
-	$(CC) $< $(INC) $(FLG) $(WEBVIEW_CFLAGS) -c -o $@
+	$(CC) $< $(INC) $(FLG) $(DEF) $(WEBVIEW_CFLAGS) -c -o $@
 
 $(UI_BUNDLE):
 	make -C ui

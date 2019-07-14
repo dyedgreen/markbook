@@ -5,9 +5,13 @@
 #include "notebook/notebook.h"
 
 #define APP_TITLE "Markbook"
-#define APP_DEBUG 1
 #define APP_DEFAULT_WIDTH 600
 #define APP_DEFAULT_HEIGHT 650
+#ifdef DEBUG
+#define APP_DEBUG 1
+#else
+#define APP_DEBUG 0
+#endif
 
 
 typedef struct View {
