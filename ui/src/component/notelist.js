@@ -7,6 +7,7 @@
 import {h, Component} from "preact";
 import {NoteFolder} from "../notebook.js";
 
+
 export class NoteListComponent extends Component {
   constructor() {
     super();

@@ -11,6 +11,7 @@ export default {
   plugins: [
     resolve(),
     babel(),
-    uglify()
+    babel({presets: ["minify"]}),
+    //uglify() FIXME: Clashes with preact-markup
   ]
 };
