@@ -88,6 +88,7 @@ void message_digest_fragment(MessageQueue* queue, char* fragment) {
     // We are a new message, create it's context
     queue->current = empty_context(fragment[0]);
     queue->fragment_count = 0;
+    DEBUG_PRINT("Revived new message of type %i.\n", queue->current->type);
   }
 
   switch (queue->current->type) {
@@ -123,13 +124,30 @@ void message_respond(MessageQueue* queue) {
       case MessageTypeListNotes:
         DEBUG_PRINT("Wanted to list notes.\n");
         if (queue->nb != NULL) {
+          DEBUG_PRINT("Notebook available, listing notes.\n");
           sds note_list = nb_api_list_notes(queue->nb);
-          send_message(queue, note_list);
-          sdsfree(note_list);
+          if (note_list != NULL) {
+            send_message(queue, note_list);
+            sdsfree(note_list);
+          } else {
+            DEBUG_PRINT("Error listing notes.\n");
+            send_message(queue, "");
+          }
         }
         break;
       case MessageTypeGetNote:
         DEBUG_PRINT("Wanted to get note: %s.\n", ctx->detail);
+        if (queue->nb != NULL) {
+          DEBUG_PRINT("Notebook available, getting note.\n");
+          sds note_html = nb_api_get_note(queue->nb, ctx->detail);
+          if (note_html != NULL) {
+            send_message(queue, note_html);
+            sdsfree(note_html);
+          } else {
+            DEBUG_PRINT("Error loading note.\n");
+            send_message(queue, "");
+          }
+        }
         break;
       case MessageTypeSearch:
         DEBUG_PRINT("Wanted to search for query: %s.\n", ctx->detail);

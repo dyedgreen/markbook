@@ -88,13 +88,22 @@ sds nb_api_list_notes(Notebook* nb) {
   while (SQLITE_ROW == sqlite3_step(query)) {
     if (sdslen(list) > 0)
       list = sdscat(list, "\n");
-    list = sdscat(list, sqlite3_column_text(query, 0));
+    list = sdscat(list, (const char*)sqlite3_column_text(query, 0));
   }
   sqlite3_finalize(query);
   return list;
 }
 
-// Returns rendered HTML
+// Returns rendered HTML as sds string.
+// The returned pointer is owned by the caller.
 sds nb_api_get_note(Notebook* nb, const char* file) {
-  return NULL; // TODO
+  sqlite3_stmt* query;
+  if (SQLITE_OK != sqlite3_prepare_v2(nb->index_db, NB_SQL_GET_NOTE, -1, &query, NULL)) return NULL;
+  if (SQLITE_OK != sqlite3_bind_text(query, 1, file, -1, NULL)) return NULL;
+  if (SQLITE_ROW != sqlite3_step(query)) return NULL;
+
+  sds html = sdsempty();
+  html = sdscat(html, (const char*)sqlite3_column_text(query, 0));
+  sqlite3_finalize(query);
+  return html;
 }

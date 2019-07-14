@@ -1,7 +1,7 @@
 #include <unistd.h>
 #include "notebook/index.h"
 #include "debug.h"
-#include "entry_points.h"
+#include "entrypoints.h"
 
 
 void* thread_indexer(void* notebook) {

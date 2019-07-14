@@ -10,8 +10,14 @@ let message_queue = {
 
 // Make respond function available to C
 window.external.c_response_handle = function(raw_message) {
-  console.log("got response", raw_message, message_queue.types[0]);
+  console.log("Got response", raw_message, message_queue.types[0]);
   handlers.get(message_queue.types.shift())(raw_message, message_queue.callbacks.shift())
+}
+
+window.external.c_notify_handle = function(type) {
+  console.log("Got notification of type", type);
+  // TODO: This is not yet implemented on the C side of things
+  subscribers.get(type).forEach(callback => callback());
 }
 
 
@@ -23,7 +29,6 @@ function handle_string_list(raw_message, callback) {
 }
 
 function handle_verbatim(raw_message, callback) {
-  console.log(raw_message, callback);
   callback(raw_message);
 }
 
@@ -31,10 +36,18 @@ function handle_verbatim(raw_message, callback) {
 const types = new Map();
 types.set("list_notes", "a");
 types.set("get_note", "b");
+types.set("search", "c");
+types.set("update_notes", "d")
 
 const handlers = new Map();
 handlers.set("a", handle_string_list);
 handlers.set("b", handle_verbatim);
+
+const subscribers = new Map();
+subscribers.set("a", []);
+subscribers.set("b", []);
+subscribers.set("c", []);
+subscribers.set("d", []);
 
 
 // Message functions
@@ -55,4 +68,10 @@ export function list_notes(callback) {
 export function get_note(note, callback) {
   if (typeof note !== "string") throw "No note given.";
   send_message(callback, types.get("get_note"), note);
+}
+
+// Register for notifications
+
+export function subscribe(type, callback) {
+  subscribers.get(types.get(type)).push(callback);
 }

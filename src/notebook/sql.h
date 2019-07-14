@@ -40,4 +40,4 @@
   "SELECT file FROM notes WHERE ready = 1;"
 
 #define NB_SQL_GET_NOTE ""\
-  "SELECT html FROM notes WHERE file = ? LIMIT 1;"
+  "SELECT html FROM notes WHERE file = ? AND ready = 1 LIMIT 1;"

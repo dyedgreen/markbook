@@ -1,9 +1,10 @@
 #include <unistd.h>
-#include "workers/entry_points.h"
+#include "workers/entrypoints.h"
 #include "bundle.h"
 #define WEBVIEW_IMPLEMENTATION
 #include "view.h"
 #include "message.h" // TODO: Fix ifdef in webview so I can have these in the proper order
+#include "debug.h"
 
 
 // Currently, because of they way the webview callbacks work,
@@ -52,8 +53,6 @@ View* view_init(Notebook* nb) {
   // case the user will be prompted
   // to select a notebook.
   view->nb = nb;
-  if (nb != NULL)
-    global_message_queue->nb = nb;
 
   return view;
 }
@@ -61,7 +60,8 @@ View* view_init(Notebook* nb) {
 void view_exit(View* view) {
   if (view == NULL) return;
   close_message_queue(global_message_queue);
-  // Webview exit kills the thread it runs in...
+  // webview_exit kills the thread it runs in...
+  webview_terminate(&view->webview);
   close_notebook(view->nb);
   free(view);
 }
@@ -79,18 +79,22 @@ void view_run(View* view) {
       nb_folder, sizeof(char)*2024);
     view->nb = open_notebook(nb_folder);
     free(nb_folder);
-    if (view->nb == NULL || pthread_create(&view->index_thread, NULL, thread_indexer, view->nb) != 0) {
-      // Abort
-      close_notebook(view->nb);
-      webview_exit(&view->webview);
-      return;
-    }
-    // Register notebook with message queue
-    global_message_queue->nb = view->nb;
   }
 
+  // Start indexing thread
+  if (view->nb == NULL || pthread_create(&view->index_thread, NULL, thread_indexer, view->nb) != 0) {
+    // Abort
+    close_notebook(view->nb);
+    webview_exit(&view->webview);
+    return;
+  }
+  // Register notebook with message queue
+  global_message_queue->nb = view->nb;
+
   // Load ui bundle
-  webview_loop(&view->webview, 0);
+  DEBUG_PRINT("Loading UI bundle...\n");
+  webview_loop(&view->webview, 1);
+  webview_loop(&view->webview, 1); // Need two such that the webview is properly initialized
   webview_inject_css(&view->webview, css_bundle);
   webview_eval(&view->webview, js_bundle);
 

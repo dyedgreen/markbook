@@ -45,9 +45,12 @@ $(UI_BUNDLE):
 # Functions
 
 run: all
-	bin/markbook
+	# This is a helper during development
+	# For this to work you must provide a 'test' folder.
+	bin/markbook ./test
 
 clean:
-	rm bin/* $(shell find . -name *.o)
+	rm bin/* $(shell find . -name *.o) || echo "Some file where already cleared."
+	make -C ui clean
 
 .PHONY: $(UI_BUNDLE) run clean
