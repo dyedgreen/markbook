@@ -26,10 +26,16 @@ MessageContext* pop_first(MessageQueue* queue) {
 
 // Send a message to JS
 void send_message(MessageQueue* queue, const char* msg) {
+  // JS encode msg
+  size_t enc_size = webview_js_encode(msg, NULL, 0);
+  char* msg_enc = malloc(enc_size);
+  webview_js_encode(msg, msg_enc, enc_size);
+  // Send message to JS land
   sds js_command = sdsempty();
-  js_command = sdscatfmt(js_command, "window.external.c_response_handle(`%s`);", msg);
+  js_command = sdscatfmt(js_command, "window.external.c_response_handle(\"%s\");", msg_enc);
   webview_eval(queue->webview, js_command);
   sdsfree(js_command);
+  free(msg_enc);
 }
 
 // Obtain a fresh context

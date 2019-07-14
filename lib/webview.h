@@ -154,6 +154,7 @@ WEBVIEW_API int webview(const char *title, const char *url, int width, int heigh
 WEBVIEW_API int webview_init(struct webview *w);
 WEBVIEW_API int webview_loop(struct webview *w, int blocking);
 WEBVIEW_API int webview_eval(struct webview *w, const char *js);
+WEBVIEW_API int webview_js_encode(const char *s, char *esc, size_t n);
 WEBVIEW_API int webview_inject_css(struct webview *w, const char *css);
 WEBVIEW_API void webview_set_title(struct webview *w, const char *title);
 WEBVIEW_API void webview_set_fullscreen(struct webview *w, int fullscreen);
@@ -199,7 +200,7 @@ WEBVIEW_API void webview_debug(const char *format, ...) {
   va_end(ap);
 }
 
-static int webview_js_encode(const char *s, char *esc, size_t n) {
+WEBVIEW_API int webview_js_encode(const char *s, char *esc, size_t n) {
   int r = 1; /* At least one byte for trailing zero */
   for (; *s; s++) {
     const unsigned char c = *s;
