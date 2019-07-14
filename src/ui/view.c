@@ -1,5 +1,5 @@
 #include <unistd.h>
-#include "workers/entrypoints.h"
+#include "worker/entrypoints.h"
 #include "bundle.h"
 #define WEBVIEW_IMPLEMENTATION
 #include "view.h"
