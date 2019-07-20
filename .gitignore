@@ -10,6 +10,7 @@ bin/*
 ui/node_modules
 ui/build/bundle.js
 ui/build/bundle.css
+ui/build/font.css
 
 # Test notebook
 test

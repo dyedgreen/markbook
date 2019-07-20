@@ -10,7 +10,7 @@
 #define MESSAGE_TYPE_UPDATE_NOTES 'd'
 
 typedef enum {
-  MessageTypeListNotes,
+  MessageTypeListNotes = 0,
   MessageTypeGetNote,
   MessageTypeSearch,
   MessageTypeUpdateNotes, // TODO: Notify JS when notes update

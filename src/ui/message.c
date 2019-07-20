@@ -45,15 +45,9 @@ MessageContext* empty_context(char type) {
   ctx->next = NULL;
 
   // Determine type
-  if (type == MESSAGE_TYPE_LIST_NOTES) {
-    ctx->type = MessageTypeListNotes;
-  } else if (type == MESSAGE_TYPE_GET_NOTE) {
-    ctx->type = MessageTypeGetNote;
-  } else if (type == MESSAGE_TYPE_SEARCH) {
-    ctx->type = MessageTypeSearch;
-  } else {
+  ctx->type = (MessageType)(type - 'a');
+  if (ctx->type > MessageTypeUnknown || ctx->type < 0)
     ctx->type = MessageTypeUnknown;
-  }
 
   return ctx;
 }
