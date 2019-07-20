@@ -1,0 +1,4 @@
+lib/** linguist-vendored
+ui/lib/** linguist-vendored
+ui/build/* linguist-vendored
+ui/styles/katex.css linguist-vendored
