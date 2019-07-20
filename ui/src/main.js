@@ -2,7 +2,6 @@ import {h, render, Component} from "preact";
 import {NoteListComponent} from './component/notelist.js';
 import {NoteComponent} from "./component/note.js";
 
-import {registerWorker} from "./worker.js"
 
 class App extends Component {
   constructor() {
@@ -28,5 +27,3 @@ render((
     <App />
   </div>
 ), document.body);
-
-registerWorker();
