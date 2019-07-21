@@ -7,17 +7,21 @@
 import {h, Component} from "preact";
 import {NoteFolder} from "../notebook.js";
 
+window.NOTE_LIST_GLOBALS = {
+  root: null,
+};
 
 export class NoteListComponent extends Component {
   constructor() {
     super();
-    this.state.root = new NoteFolder("");
+    this.state.root = window.NOTE_LIST_GLOBALS.root;
     this.state.closed = new Set();
   }
 
   updateNotes() {
     NoteFolder.root(root_folder => {
-      this.setState({ root: root_folder });
+      window.NOTE_LIST_GLOBALS.root = root_folder;
+      this.setState({root: root_folder});
     });
   }
 
@@ -35,6 +39,9 @@ export class NoteListComponent extends Component {
   }
 
   renderFolder(folder, onselect) {
+    if (folder === null)
+      return [];
+
     let items = [];
 
     // Render notes
@@ -62,6 +69,6 @@ export class NoteListComponent extends Component {
 
   render(props, state) {
     const onselect = typeof props.onSelect === "function" ? props.onSelect : () => {};
-    return <ul class="note-list">{this.renderFolder(this.state.root, onselect)}</ul>;
+    return <ul class="note-list">{this.renderFolder(state.root, onselect)}</ul>;
   }
 }
