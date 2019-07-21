@@ -37,11 +37,13 @@ const types = new Map();
 types.set("list_notes", "a");
 types.set("get_note", "b");
 types.set("search", "c");
-types.set("update_notes", "d")
+types.set("get_root", "d")
+types.set("update_notes", "e")
 
 const handlers = new Map();
 handlers.set("a", handle_string_list);
 handlers.set("b", handle_verbatim);
+handlers.set("d", handle_verbatim);
 
 const subscribers = new Map();
 subscribers.set("a", []);
@@ -68,6 +70,11 @@ export function list_notes(callback) {
 export function get_note(note, callback) {
   if (typeof note !== "string") throw "No note given.";
   send_message(callback, types.get("get_note"), note);
+}
+
+// Retrieve the notebook root folder
+export function get_root(callback) {
+  send_message(callback, types.get("get_root"));
 }
 
 // Register for notifications

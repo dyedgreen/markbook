@@ -1,5 +1,5 @@
 import {h, render, Component} from "preact";
-import {NoteListComponent} from './component/notelist.js';
+import {ToolbarComponent} from './component/toolbar.js';
 import {NoteComponent} from "./component/note.js";
 
 
@@ -14,16 +14,11 @@ class App extends Component {
   }
 
   render(props, state) {
-    return (<div>
-      <NoteListComponent onSelect={(note) => {this.selectNote(note)}} />
+    return (<div class="app">
+      <ToolbarComponent onSelect={(note) => {this.selectNote(note)}} />
       <NoteComponent note={state.note} />
     </div>);
   }
 }
 
-render((
-  <div>
-    <h1>Hello World! Here are the notes:</h1>
-    <App />
-  </div>
-), document.body);
+render(<App />, document.body);

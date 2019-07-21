@@ -35,24 +35,33 @@ export class NoteListComponent extends Component {
   }
 
   renderFolder(folder, onselect) {
-    const closed = this.state.closed.has(folder.file);
-    const notes = closed ? "" : folder.notes.map(note =>
-      <li class="note" onClick={() => onselect(note)}>[NOTE] {note.title}</li>
-    );
-    const folders = closed ? "" : folder.folders.map(folder => this.renderFolder(folder, onselect));
-    return (
-      <li class="folder">
-        <span onClick={() => this.toggleFolder(folder)}>[FOLDER] {folder.title}</span>
-        <ul>
-          {notes}
-          {folders}
-        </ul>
-      </li>
-    );
+    let items = [];
+
+    // Render notes
+    folder.notes.forEach(note => {
+      items.push(
+        <li class="note icon-file" onClick={() => onselect(note)}>{note.title}</li>
+      );
+    });
+
+    // Render folders
+    folder.folders.forEach(sub_folder => {
+      const closed = this.state.closed.has(sub_folder.file);
+      const classList = "folder" + (closed ? " collapsed" : "");
+      const sub_items = closed ? [] : this.renderFolder(sub_folder, onselect);
+      items.push(
+        <li class={classList}>
+          <span class="icon-folder" onClick={() => this.toggleFolder(sub_folder)}>{sub_folder.title}</span>
+          <ul>{sub_items}</ul>
+        </li>
+      );
+    });
+
+    return items;
   }
 
   render(props, state) {
     const onselect = typeof props.onSelect === "function" ? props.onSelect : () => {};
-    return <ul>{this.renderFolder(state.root, onselect)}</ul>
+    return <ul class="note-list">{this.renderFolder(state.root, onselect)}</ul>;
   }
 }

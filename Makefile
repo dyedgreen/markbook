@@ -46,8 +46,7 @@ $(UI_BUNDLE):
 
 run: all
 	# This is a helper during development
-	# For this to work you must provide a 'test' folder.
-	bin/markbook ./test
+	bin/markbook
 
 clean:
 	rm bin/* $(shell find . -name *.o) || echo "Some file where already cleared."

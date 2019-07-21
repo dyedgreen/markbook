@@ -1,4 +1,4 @@
-// Implements a component that display
+// Implements a component that displays
 // a given note
 
 import {h, Component} from "preact";
@@ -12,9 +12,7 @@ function Equation(props) {
     displayMode: props.type === "display",
   });
 
-  return props.type === "display" ?
-    <div  class="math" style="color:red"><Markup markup={html} /></div>:
-    <span class="math" style="color:red"><Markup markup={html} /></span>;
+  return <Markup markup={html} />;
 }
 
 function A(props) {
@@ -40,7 +38,6 @@ export class NoteComponent extends Component {
     if (!props.note)
       return <h2>No Note Selected</h2>;
     this.updateNote(props.note);
-    console.log(state);
-    return <Markup markup={state.markup} components={{Equation, A}} />
+    return <Markup type="html" markup={state.markup} components={{Equation, A}} />
   }
 }

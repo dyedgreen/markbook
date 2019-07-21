@@ -93,6 +93,7 @@ void message_digest_fragment(MessageQueue* queue, char* fragment) {
 
   switch (queue->current->type) {
     case MessageTypeListNotes:
+    case MessageTypeGetRoot:
       // Expect no fragments
       append_current(queue);
       break;
@@ -151,6 +152,13 @@ void message_respond(MessageQueue* queue) {
         break;
       case MessageTypeSearch:
         DEBUG_PRINT("Wanted to search for query: %s.\n", ctx->detail);
+        break;
+      case MessageTypeGetRoot:
+        DEBUG_PRINT("Wanted to get notebook root.\n");
+        if (queue->nb != NULL) {
+          DEBUG_PRINT("Notebook available, returning root.\n");
+            send_message(queue, queue->nb->root);
+        }
         break;
       default:
         // Message not recognized

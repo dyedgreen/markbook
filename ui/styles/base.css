@@ -5,3 +5,15 @@ html, body {
   color: #000;
   background: #fff;
 }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  cursor: default;
+}
+input {
+  -webkit-user-select: text;
+  cursor: text;
+}

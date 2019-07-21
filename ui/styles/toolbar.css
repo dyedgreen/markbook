@@ -1,0 +1,95 @@
+.toolbar {
+  height: 40px;
+  width: 240px;
+  max-width: calc(100vw - 30px);
+  display: block;
+  position: fixed;
+  right: 15px;
+  bottom: 15px;
+
+  color: rgba(0,0,0,0.6);
+  background: rgba(200,200,200,0.8);
+  -webkit-backdrop-filter: blur(15px);
+
+  border-radius: 10px;
+  overflow: hidden;
+
+  z-index: 10;
+}
+.toolbar.extended {
+  height: calc(100vh - 30px);;
+}
+.toolbar.extended .title {
+  height: 30px;
+  width: 100%;
+  display: block;
+
+  font-size: 18px;
+  font-weight: bold;
+  text-align: center;
+  line-height: 30px;
+}
+.toolbar.extended .content {
+  height: calc(100vh - 140px);
+  width: 100%;
+  display: block;
+
+  overflow-y: scroll;
+}
+
+.toolbar .actions {
+  height: 40px;
+  width: 100%;
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+
+  white-space: nowrap;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.toolbar .actions * {
+  vertical-align: top;
+}
+.toolbar .actions .button,
+.toolbar .actions label {
+  width: 40px;
+  height: 40px;
+  display: inline-block;
+
+  font-size: 25px;
+  line-height: 42px;
+  text-decoration: none;
+  text-align: center;
+
+  color: inherit;
+  background: none;
+
+  cursor: pointer;
+}
+/* we assume only one (search) input field */
+.toolbar .actions label {
+  position: absolute;
+  top: 0;
+  left: 40px;
+}
+.toolbar .actions input {
+  width: calc(100% - 50px);
+  height: 100%;
+  padding: 0 2px 0 40px;
+  display: inline-block;
+  margin: 0 0 0 -2px;
+
+  font-size: 18px;
+  line-height: 40px;
+
+  color: inherit;
+  background: none;
+  border: none;
+  outline: none;
+}
+.toolbar .actions input::placeholder {
+  color: rgba(0,0,0,0.4);
+}
