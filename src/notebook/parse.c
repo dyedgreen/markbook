@@ -272,7 +272,7 @@ static int cb_leave_span(MD_SPANTYPE type, void* detail, void* userdata) {
     case MD_SPAN_DEL:           s->html = sdscat(s->html, "</del>"); break;
     case MD_SPAN_A:             s->html = sdscat(s->html, "</a>"); break;
     case MD_SPAN_IMG:
-      s->html = sdscat(s->html, "\">");
+      s->html = sdscat(s->html, "\" />");
       s->mask ^= M_IMAGE_OPEN;
       break;
     case MD_SPAN_LATEXMATH:

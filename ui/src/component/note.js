@@ -20,11 +20,6 @@ function A(props) {
   return <span class="link" style="color:blue" onClick={() => {alert("Trying to open: "+props.href)}}>{props.children}</span>
 }
 
-// function Img(props) {
-//   console.log(props.src.replace(/^\.\//, `${window.GLOBALS.root}/`), props, window.GLOBALS.root);
-//   return <img src={props.src.replace(/^\.\//, `file://${window.GLOBALS.root}/`)} alt={props.alt} />;
-// }
-
 
 export class NoteComponent extends Component {
   constructor() {
@@ -42,8 +37,8 @@ export class NoteComponent extends Component {
 
   render(props, state) {
     if (!props.note)
-      return <h2>No Note Selected</h2>;
+      return <div class="empty icon-file"></div>;
     this.updateNote(props.note);
-    return <Markup type="html" markup={state.markup} components={{Equation, A}} />
+    return <Markup class="markdown" markup={state.markup} components={{Equation, A}} />
   }
 }

@@ -32,24 +32,22 @@ function handle_verbatim(raw_message, callback) {
   callback(raw_message);
 }
 
-
 const types = new Map();
 types.set("list_notes", "a");
 types.set("get_note", "b");
 types.set("search", "c");
 types.set("get_root", "d")
-types.set("update_notes", "e")
+types.set("get_img", "e")
+types.set("update_notes", "f")
 
 const handlers = new Map();
 handlers.set("a", handle_string_list);
 handlers.set("b", handle_verbatim);
 handlers.set("d", handle_verbatim);
+handlers.set("e", handle_verbatim);
 
 const subscribers = new Map();
-subscribers.set("a", []);
-subscribers.set("b", []);
-subscribers.set("c", []);
-subscribers.set("d", []);
+types.forEach((key, val) => subscribers.set(val, []));
 
 
 // Message functions

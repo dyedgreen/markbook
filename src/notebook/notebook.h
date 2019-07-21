@@ -15,6 +15,10 @@ char* nb_file_path(Notebook* nb, const char* file);
 int nb_note_id(Notebook* nb, const char* file);
 
 // API for consumption by JS part
+// ------------------------------
+// The returned strings / sds
+// strings must be freed by the
+// caller.
 
 // Returns newline separated list of file names
 sds nb_api_list_notes(Notebook* nb);

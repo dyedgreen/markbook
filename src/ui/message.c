@@ -152,16 +152,21 @@ void message_respond(MessageQueue* queue) {
         break;
       case MessageTypeSearch:
         DEBUG_PRINT("Wanted to search for query: %s.\n", ctx->detail);
+        send_message(queue, "404");
         break;
       case MessageTypeGetRoot:
         DEBUG_PRINT("Wanted to get notebook root.\n");
         if (queue->nb != NULL) {
           DEBUG_PRINT("Notebook available, returning root: %s\n", queue->nb->root);
-            send_message(queue, queue->nb->root);
+          send_message(queue, queue->nb->root);
+        } else {
+          DEBUG_PRINT("Error, notebook not present.\n");
+          send_message(queue, "");
         }
         break;
       default:
         // Message not recognized
+        send_message(queue, "");
         break;
     }
     // Discard used context
