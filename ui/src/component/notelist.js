@@ -62,6 +62,6 @@ export class NoteListComponent extends Component {
 
   render(props, state) {
     const onselect = typeof props.onSelect === "function" ? props.onSelect : () => {};
-    return <ul class="note-list">{this.renderFolder(state.root, onselect)}</ul>;
+    return <ul class="note-list">{this.renderFolder(this.state.root, onselect)}</ul>;
   }
 }

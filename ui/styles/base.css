@@ -44,65 +44,7 @@ input {
   -webkit-user-select: none;
 }
 
-/* Headings and text */
-
-h1, h2, h3, h4, h5, h6 {
-  display: block;
-  margin: 0 0 8px 0;
-}
-h1 {
-  font-size: 30px;
-}
-h2 {
-  font-size: 26px;
-}
-h3 {
-  font-size: 22px;
-}
-h4 {
-  font-size: 20px;
-}
-h5 {
-  font-size: 18px;
-}
-h6 {
-  font-size: 16px;
-}
-
-p {
-  margin: 0 0 5px 0;
-}
-
-/* Lists */
-
-.markdown ol {
-
-}
-
-/* Images and figures */
-
 .markdown .katex {
   display: inline-block;
   margin: 0 5px;
-}
-
-.markdown .code {
-  /* TODO */
-}
-
-.markdown img {
-  max-width: calc(100% + 30px);
-  max-height: 800px;
-  margin: 10px;
-  margin-left: -15px;
-}
-
-.markdown hr {
-  width: 80%;
-  height: 1px;
-  display: block;
-  margin: 15px auto;
-
-  border: none;
-  background: #000;
 }

@@ -16,8 +16,8 @@ function Equation(props) {
 }
 
 function A(props) {
-  // We need to handle opening links manually
-  return <span class="link" style="color:blue" onClick={() => {alert("Trying to open: "+props.href)}}>{props.children}</span>
+  // We need to handle opening links ourselves
+  return <span class="link" style="color:blue" onClick={() => {alert("Trying to open: "+props.href)}}> {props.children} </span>
 }
 
 
