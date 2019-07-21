@@ -8,24 +8,29 @@
   list-style: none;
 }
 
+.note-list .folder {
+  position: relative;
+}
 .note-list .folder ul {
   padding: 0 0 0 20px;
 }
 .note-list .folder > span {
-  width: 100%;
+  width: calc(100% - 22px);
   height: 22px;
   display: block;
-  position: relative;
 
   font-size: 18px;
   font-weight: bold;
+  text-transform: capitalize;
+  text-overflow: ellipsis;
 
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
 }
-.note-list .folder > span:after {
+.note-list .folder:after {
   width: 22px;
-  height: auto;
-  min-height: 22px;
+  height: 22px;
   display: block;
   position: absolute;
   top: 0;
@@ -36,11 +41,11 @@
   font-style: normal;
   font-weight: normal;
   text-align: center;
-  line-height: 26px;
+  line-height: 24px;
 
   content: '\e803' /* less icon */
 }
-.note-list .folder.collapsed > span:after {
+.note-list .folder.collapsed:after {
   content: '\e804' /* more icon */
 }
 
@@ -48,6 +53,9 @@
   font-size: 18px;
   font-weight: normal;
   text-transform: capitalize;
+  text-overflow: ellipsis;
 
   cursor: pointer;
+  overflow: hidden;
+  white-space: nowrap;
 }

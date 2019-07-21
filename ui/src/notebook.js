@@ -6,7 +6,7 @@ import {list_notes, get_note} from "./message.js";
 
 // Represents an object
 // in the file system.
-class File {
+class NotebookFile {
   constructor(file) {
     this.file = `${file}`;
   }
@@ -29,7 +29,7 @@ class File {
 }
 
 // Represents a single note
-export class Note extends File {
+export class Note extends NotebookFile {
   // Pass note html to callback
   html(callback) {
     get_note(this.file, callback);
@@ -38,7 +38,7 @@ export class Note extends File {
 
 // Represents a folder containing
 // notes.
-export class NoteFolder extends File {
+export class NoteFolder extends NotebookFile {
   constructor(file) {
     super(file);
     this.notes = [];
@@ -61,7 +61,9 @@ export class NoteFolder extends File {
         let c_path = "";
         // Create folders containing note if they
         // don't exist
-        note.path.split("/").forEach(path_part => {
+        note.path.split("/").forEach((path_part, i) => {
+          if (i > 0)
+            path_part = `/${path_part}`;
           if (!folder_map.has(c_path + path_part)) {
             const folder = new NoteFolder(c_path + path_part);
             folder_map.set(folder.file, folder);

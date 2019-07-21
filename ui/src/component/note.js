@@ -20,6 +20,12 @@ function A(props) {
   return <span class="link" style="color:blue" onClick={() => {alert("Trying to open: "+props.href)}}>{props.children}</span>
 }
 
+// function Img(props) {
+//   console.log(props.src.replace(/^\.\//, `${window.GLOBALS.root}/`), props, window.GLOBALS.root);
+//   return <img src={props.src.replace(/^\.\//, `file://${window.GLOBALS.root}/`)} alt={props.alt} />;
+// }
+
+
 export class NoteComponent extends Component {
   constructor() {
     super();

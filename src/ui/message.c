@@ -156,7 +156,7 @@ void message_respond(MessageQueue* queue) {
       case MessageTypeGetRoot:
         DEBUG_PRINT("Wanted to get notebook root.\n");
         if (queue->nb != NULL) {
-          DEBUG_PRINT("Notebook available, returning root.\n");
+          DEBUG_PRINT("Notebook available, returning root: %s\n", queue->nb->root);
             send_message(queue, queue->nb->root);
         }
         break;
