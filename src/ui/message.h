@@ -8,16 +8,14 @@
 #define MESSAGE_TYPE_GET_NOTE     'b'
 #define MESSAGE_TYPE_SEARCH       'c'
 #define MESSAGE_TYPE_GET_ROOT     'd'
-#define MESSAGE_TYPE_GET_IMG      'e'
-#define MESSAGE_TYPE_UPDATE_NOTES 'f'
+#define MESSAGE_TYPE_OPEN         'e'
 
 typedef enum {
   MessageTypeListNotes = 0,
   MessageTypeGetNote,
   MessageTypeSearch,
   MessageTypeGetRoot,
-  MessageTypeGetImg,
-  MessageTypeUpdateNotes, // TODO: Notify JS when notes update
+  MessageTypeOpen,
   MessageTypeUnknown,
 } MessageType;
 

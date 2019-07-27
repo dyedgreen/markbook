@@ -29,7 +29,7 @@ export class ToolbarComponent extends Component {
     switch (state.extended) {
       case "notes":
         title = <h1 class="title">Notes</h1>;
-        content = <span class="content"><NoteListComponent onSelect={onselect} /></span>;
+        content = <span class="content"><NoteListComponent onSelect={(...args) => { this.toggleNotes(); onselect(...args); }} /></span>;
         break;
     }
 

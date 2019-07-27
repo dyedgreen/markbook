@@ -32,19 +32,22 @@ function handle_verbatim(raw_message, callback) {
   callback(raw_message);
 }
 
+function handle_discard() {
+  // no op
+}
+
 const types = new Map();
 types.set("list_notes", "a");
 types.set("get_note", "b");
 types.set("search", "c");
-types.set("get_root", "d")
-types.set("get_img", "e")
-types.set("update_notes", "f")
+types.set("get_root", "d");
+types.set("open", "e");
 
 const handlers = new Map();
 handlers.set("a", handle_string_list);
 handlers.set("b", handle_verbatim);
 handlers.set("d", handle_verbatim);
-handlers.set("e", handle_verbatim);
+handlers.set("e", handle_discard);
 
 const subscribers = new Map();
 types.forEach((key, val) => subscribers.set(val, []));
@@ -75,8 +78,6 @@ export function get_root(callback) {
   send_message(callback, types.get("get_root"));
 }
 
-// Register for notifications
-
-export function subscribe(type, callback) {
-  subscribers.get(types.get(type)).push(callback);
+export function open(url) {
+  send_message(null, types.get("open"), `${url}`);
 }

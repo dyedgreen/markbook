@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "debug.h"
 #include "message.h"
 
@@ -99,6 +100,7 @@ void message_digest_fragment(MessageQueue* queue, char* fragment) {
       break;
     case MessageTypeGetNote:
     case MessageTypeSearch:
+    case MessageTypeOpen:
       // Expect one fragment: the (note file | query string)
       // Detail is simply this one string.
       if (queue->fragment_count == 1) {
@@ -163,6 +165,15 @@ void message_respond(MessageQueue* queue) {
           DEBUG_PRINT("Error, notebook not present.\n");
           send_message(queue, "");
         }
+        break;
+      case MessageTypeOpen:
+        DEBUG_PRINT("Wanted to open url: %s\n", ctx->detail);
+        sds cmd = sdsnew("open ");
+        cmd = sdscatsds(cmd, ctx->detail);
+        int res = system(cmd);
+        DEBUG_PRINT("Resulted in code %i\n", res);
+        sdsfree(cmd);
+        send_message(queue, "");
         break;
       default:
         // Message not recognized

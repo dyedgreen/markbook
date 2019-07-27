@@ -3,10 +3,10 @@
 
 import {h, Component} from "preact";
 import Markup from "preact-markup/src";
+import {open} from "../message.js";
 
 
 function Equation(props) {
-  // TODO: Include KaTeX rendering properly (currently it is hot-loaded >.<)
   const html = katex.renderToString("".concat(props.children), {
     throwOnError: false,
     displayMode: props.type === "display",
@@ -17,7 +17,8 @@ function Equation(props) {
 
 function A(props) {
   // We need to handle opening links ourselves
-  return <span class="link" style="color:blue" onClick={() => {alert("Trying to open: "+props.href)}}> {props.children} </span>
+  // TODO: Recognize: Other notes, YouTube, Twitter, ...
+  return <span class="link" onClick={() => open(props.href)}> {props.children} </span>
 }
 
 
