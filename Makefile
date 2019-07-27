@@ -29,8 +29,11 @@ UI_BUNDLE = ui/build/bundle.o
 all: $(BIN)
 
 app: $(BIN)
-	echo "TODO: Create macOS .app bundle"
-	echo "TODO: Disable DEBUG output"
+	rm -r bin/Markbook.app || echo ""
+	cp -r bundle bin/bundle
+	mv bin/bundle bin/Markbook.app
+	mkdir bin/Markbook.app/Contents/MacOS
+	cp bin/markbook bin/Markbook.app/Contents/MacOS
 
 $(BIN): $(OBJ)
 $(BIN): $(UI_BUNDLE)
@@ -50,6 +53,7 @@ run: all
 
 clean:
 	rm bin/* $(shell find . -name *.o) || echo "Some file where already cleared."
+	rm -r bin/Markbook.app || echo "Some file where already cleared."
 	make -C ui clean
 
 .PHONY: $(UI_BUNDLE) run clean

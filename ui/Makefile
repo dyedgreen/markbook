@@ -17,6 +17,6 @@ npm:
 	npm install
 
 clean:
-	rm build/bundle.o build/bundle.js build/bundle.css
+	rm build/bundle.o build/bundle.js build/bundle.css || echo "Some file where already cleared."
 
 .PHONY: bundle clean npm
