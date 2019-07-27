@@ -6,7 +6,7 @@ import Markup from "preact-markup/src";
 import {open} from "../message.js";
 
 
-function Equation(props) {
+export function Equation(props) {
   const html = katex.renderToString("".concat(props.children), {
     throwOnError: false,
     displayMode: props.type === "display",

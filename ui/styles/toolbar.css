@@ -37,6 +37,22 @@
   overflow-y: scroll;
 }
 
+.toolbar .content .item {
+  width: 100%;
+  height: auto;
+  padding: 10px;
+  display: block;
+  cursor: pointer;
+  background: rgba(255,255,255,0);
+  transition: .1s;
+}
+.toolbar .content .item:hover {
+  background: rgba(255,255,255,0.3);
+}
+.toolbar .content .item + .item {
+  border-top: 1px solid rgba(0,0,0,0.1);
+}
+
 .toolbar .actions {
   height: 40px;
   width: 100%;

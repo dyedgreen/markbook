@@ -7,20 +7,16 @@
 import {h, Component} from "preact";
 import {NoteFolder} from "../notebook.js";
 
-window.NOTE_LIST_GLOBALS = {
-  root: null,
-};
 
 export class NoteListComponent extends Component {
   constructor() {
     super();
-    this.state.root = window.NOTE_LIST_GLOBALS.root;
+    this.state.root = null;
     this.state.closed = new Set();
   }
 
   updateNotes() {
     NoteFolder.root(root_folder => {
-      window.NOTE_LIST_GLOBALS.root = root_folder;
       this.setState({root: root_folder});
     });
   }

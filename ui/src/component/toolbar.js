@@ -4,6 +4,8 @@
 import {h, Component} from "preact";
 import {NoteListComponent} from "./notelist.js"
 import {search} from "../message.js";
+import {Note} from "../notebook.js";
+import {Equation} from "./note.js"
 
 
 export class ToolbarComponent extends Component {
@@ -26,9 +28,33 @@ export class ToolbarComponent extends Component {
 
   updateSearch(e) {
     this.setState({query: e.target.value});
-    search(e.target.value, results => {
-      this.setState({results, extended: "search"});
-    });
+    if (e.target.value === "") {
+      this.hide();
+    } else {
+      search(e.target.value, results => {
+        this.setState({results, extended: "search"});
+      });
+    }
+  }
+
+  renderSearchItem(result, onselect) {
+    const note = new Note(result.note);
+    let content = "";
+    switch (result.type) {
+      // Equation
+      case 0:
+        content = Equation({children: result.value});
+        break;
+      // Code
+      case 7:
+        content = <code>{result.value}</code>
+        break;
+      // Heading
+      default:
+        content = result.value;
+        break;
+    }
+    return <span class="item" onClick={() => { this.hide(); onselect(note); }}>{content}</span>;
   }
 
   render(props, state) {
@@ -45,13 +71,15 @@ export class ToolbarComponent extends Component {
         break;
       case "search":
         title = <h1 class="title">Search</h1>;
-        let results = state.results.map(r => <span class="search-result" style="margin:10px" onClick={() => { this.hide(); console.log(r.note) }}>{r.value}</span>);
+        let results = state.results.map(r => this.renderSearchItem(r, onselect));
         content = <span class="content">{results}</span>;
         break;
     }
 
     return (<div class={classList}>
-      {title}{content}
+      <span>
+        {title}{content}
+      </span>
       <span class="actions">
         <a class="button icon-folder" onClick={() => this.toggleNotes()}></a>
         <label class="icon-search" for="search"></label>

@@ -4,18 +4,28 @@
 // in C will respond to messages in the order
 // they were sent.
 let message_queue = new Map();
+let response_queue = [];
 
 // Make respond function available to C
 window.external.c_response_handle = function(id, raw_message) {
   console.log("Got response", raw_message, id);
-  handlers.get(id.split("-")[0])(raw_message, message_queue.get(id));
-  message_queue.delete(id);
+  response_queue.push({id, raw_message});
 }
+setInterval(() => {
+  // Service the response queue
+  // We have to do it this way, since the eval has
+  // problems with long-running callback chains...
+  let resp = response_queue.pop();
+  while (resp) {
+    handlers.get(resp.id.split("-")[0])(resp.raw_message, message_queue.get(resp.id));
+    message_queue.delete(resp.id);
+    resp = response_queue.pop();
+  }
+}, 25);
 
 window.external.c_notify_handle = function(type) {
   console.log("Got notification of type", type);
   // TODO: This is not yet implemented on the C side of things
-  subscribers.get(type).forEach(callback => callback());
 }
 
 
@@ -60,9 +70,6 @@ handlers.set("b", handle_verbatim);
 handlers.set("c", handle_search);
 handlers.set("d", handle_verbatim);
 handlers.set("e", handle_discard);
-
-const subscribers = new Map();
-types.forEach((key, val) => subscribers.set(val, []));
 
 
 // Message functions
