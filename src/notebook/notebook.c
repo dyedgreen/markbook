@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "notebook.h"
 #include "sql.h"
+#include "debug.h"
 
 #define INDEX_DB_FILE "markbook.db" // TODO: change to .markbook or similar for release!
 
@@ -107,4 +108,31 @@ sds nb_api_get_note(Notebook* nb, const char* file) {
   html = sdscat(html, (const char*)sqlite3_column_text(query, 0));
   sqlite3_finalize(query);
   return html;
+}
+
+// Returns search results from database. Each
+// result is returned on three lines (type, note, and value)
+sds nb_api_search(Notebook* nb, const char* search_term) {
+  sqlite3_stmt* query;
+  char* query_str = sqlite3_mprintf(NB_SQL_SEARCH, search_term);
+  if (SQLITE_OK != sqlite3_prepare_v2(nb->index_db, query_str, -1, &query, NULL)) {
+    sqlite3_free(query_str);
+    return NULL;
+  }
+  sqlite3_free(query_str);
+
+  sds list = sdsempty();
+  while (SQLITE_ROW == sqlite3_step(query)) {
+    if (sdslen(list) > 0)
+      list = sdscat(list, "\n");
+    // Append result
+    list = sdscatfmt(
+      list,
+      "%i\n%s\n%s",
+      sqlite3_column_int(query, 0),
+      (const char*)sqlite3_column_text(query, 1),
+      (const char*)sqlite3_column_text(query, 2));
+  }
+  sqlite3_finalize(query);
+  return list;
 }

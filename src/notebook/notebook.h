@@ -25,4 +25,4 @@ sds nb_api_list_notes(Notebook* nb);
 // Returns rendered HTML
 sds nb_api_get_note(Notebook* nb, const char* file);
 // Returns search results
-// TODO (!)
+sds nb_api_search(Notebook* nb, const char* search_term);

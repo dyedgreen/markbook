@@ -3,15 +3,13 @@
 // Messages are serialized, i.e. the worker
 // in C will respond to messages in the order
 // they were sent.
-let message_queue = {
-  callbacks: [],
-  types: [],
-};
+let message_queue = new Map();
 
 // Make respond function available to C
-window.external.c_response_handle = function(raw_message) {
-  console.log("Got response", raw_message, message_queue.types[0]);
-  handlers.get(message_queue.types.shift())(raw_message, message_queue.callbacks.shift())
+window.external.c_response_handle = function(id, raw_message) {
+  console.log("Got response", raw_message, id);
+  handlers.get(id.split("-")[0])(raw_message, message_queue.get(id));
+  message_queue.delete(id);
 }
 
 window.external.c_notify_handle = function(type) {
@@ -32,6 +30,19 @@ function handle_verbatim(raw_message, callback) {
   callback(raw_message);
 }
 
+function handle_search(raw_message, callback) {
+  let results = [];
+  let rows = raw_message.split("\n");
+  for (let i = 0; i+2 < rows.length; i += 3) {
+    results.push({
+      type: +rows[i],
+      note: rows[i+1],
+      value: rows[i+2],
+    });
+  }
+  callback(results);
+}
+
 function handle_discard() {
   // no op
 }
@@ -46,6 +57,7 @@ types.set("open", "e");
 const handlers = new Map();
 handlers.set("a", handle_string_list);
 handlers.set("b", handle_verbatim);
+handlers.set("c", handle_search);
 handlers.set("d", handle_verbatim);
 handlers.set("e", handle_discard);
 
@@ -56,10 +68,12 @@ types.forEach((key, val) => subscribers.set(val, []));
 // Message functions
 
 function send_message(callback, type, ...fragments) {
-  window.external.invoke(type);
+  const id = `${type}-${Math.random().toString(36).substring(7)}`;
+  // Queue callback
+  message_queue.set(id, typeof callback === "function" ? callback : () => {});
+  // Send message
+  window.external.invoke(id);
   fragments.forEach(fragment => window.external.invoke(`${fragment}`));
-  message_queue.callbacks.push(typeof callback === "function" ? callback : () => {});
-  message_queue.types.push(type);
 }
 
 // Retrieve a list with all available notes
@@ -71,6 +85,12 @@ export function list_notes(callback) {
 export function get_note(note, callback) {
   if (typeof note !== "string") throw "No note given.";
   send_message(callback, types.get("get_note"), note);
+}
+
+// Search the node index
+export function search(query, callback) {
+  if (typeof query !== "string") throw "No query given.";
+  send_message(callback, types.get("search"), query);
 }
 
 // Retrieve the notebook root folder

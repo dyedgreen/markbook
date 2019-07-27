@@ -21,7 +21,8 @@ typedef enum {
 
 typedef struct MessageContext {
   MessageType type;
-  sds detail;               // Detail data. This is a sds string (but may contain any data)
+  sds id;                      // Unique message id
+  sds detail;                  // Detail data. This is a sds string (but may contain any data)
   struct MessageContext* next;
 } MessageContext;
 

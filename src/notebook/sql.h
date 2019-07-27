@@ -41,3 +41,7 @@
 
 #define NB_SQL_GET_NOTE ""\
   "SELECT html FROM notes WHERE file = ? AND ready = 1 LIMIT 1;"
+
+// NOTE: We have to use sqlite3_mprintf(), since we want to interpolate *inside* the string!
+#define NB_SQL_SEARCH ""\
+  "SELECT type, (SELECT file FROM notes WHERE id=note LIMIT 1), value FROM search WHERE value LIKE \"%%%q%%\";"

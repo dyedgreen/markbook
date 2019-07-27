@@ -26,27 +26,28 @@ MessageContext* pop_first(MessageQueue* queue) {
 }
 
 // Send a message to JS
-void send_message(MessageQueue* queue, const char* msg) {
+void send_message(MessageQueue* queue, const char* id, const char* msg) {
   // JS encode msg
   size_t enc_size = webview_js_encode(msg, NULL, 0);
   char* msg_enc = malloc(enc_size);
   webview_js_encode(msg, msg_enc, enc_size);
   // Send message to JS land
   sds js_command = sdsempty();
-  js_command = sdscatfmt(js_command, "window.external.c_response_handle(\"%s\");", msg_enc);
+  js_command = sdscatfmt(js_command, "window.external.c_response_handle(\"%s\", \"%s\");", id, msg_enc);
   webview_eval(queue->webview, js_command);
   sdsfree(js_command);
   free(msg_enc);
 }
 
 // Obtain a fresh context
-MessageContext* empty_context(char type) {
+MessageContext* empty_context(char* id) {
   MessageContext* ctx = malloc(sizeof(MessageContext));
+  ctx->id = sdsnew(id);
   ctx->detail = sdsempty();
   ctx->next = NULL;
 
   // Determine type
-  ctx->type = (MessageType)(type - 'a');
+  ctx->type = (MessageType)(*id - 'a');
   if (ctx->type > MessageTypeUnknown || ctx->type < 0)
     ctx->type = MessageTypeUnknown;
 
@@ -58,6 +59,7 @@ void destroy_context(MessageContext* ctx) {
   // The detail field is not allowed to contain pointers owned by the queue
   // so we may free it here
   if (ctx == NULL) return;
+  sdsfree(ctx->id);
   sdsfree(ctx->detail);
   free(ctx);
 }
@@ -87,9 +89,9 @@ void close_message_queue(MessageQueue* queue) {
 void message_digest_fragment(MessageQueue* queue, char* fragment) {
   if (queue->current == NULL) {
     // We are a new message, create it's context
-    queue->current = empty_context(fragment[0]);
+    queue->current = empty_context(fragment);
     queue->fragment_count = 0;
-    DEBUG_PRINT("Revived new message of type %i.\n", queue->current->type);
+    DEBUG_PRINT("Revived new message of type %i (id: %s).\n", queue->current->type, queue->current->id);
   }
 
   switch (queue->current->type) {
@@ -130,11 +132,11 @@ void message_respond(MessageQueue* queue) {
           DEBUG_PRINT("Notebook available, listing notes.\n");
           sds note_list = nb_api_list_notes(queue->nb);
           if (note_list != NULL) {
-            send_message(queue, note_list);
+            send_message(queue, ctx->id, note_list);
             sdsfree(note_list);
           } else {
             DEBUG_PRINT("Error listing notes.\n");
-            send_message(queue, "");
+            send_message(queue, ctx->id, "");
           }
         }
         break;
@@ -144,26 +146,33 @@ void message_respond(MessageQueue* queue) {
           DEBUG_PRINT("Notebook available, getting note.\n");
           sds note_html = nb_api_get_note(queue->nb, ctx->detail);
           if (note_html != NULL) {
-            send_message(queue, note_html);
+            send_message(queue, ctx->id, note_html);
             sdsfree(note_html);
           } else {
             DEBUG_PRINT("Error loading note.\n");
-            send_message(queue, "");
+            send_message(queue, ctx->id, "");
           }
         }
         break;
       case MessageTypeSearch:
         DEBUG_PRINT("Wanted to search for query: %s.\n", ctx->detail);
-        send_message(queue, "404");
+        sds search_list = nb_api_search(queue->nb, ctx->detail);
+        if (search_list != NULL) {
+          send_message(queue, ctx->id, search_list);
+          sdsfree(search_list);
+        } else {
+          DEBUG_PRINT("Error loading search.\n");
+          send_message(queue, ctx->id, "");
+        }
         break;
       case MessageTypeGetRoot:
         DEBUG_PRINT("Wanted to get notebook root.\n");
         if (queue->nb != NULL) {
           DEBUG_PRINT("Notebook available, returning root: %s\n", queue->nb->root);
-          send_message(queue, queue->nb->root);
+          send_message(queue, ctx->id, queue->nb->root);
         } else {
           DEBUG_PRINT("Error, notebook not present.\n");
-          send_message(queue, "");
+          send_message(queue, ctx->id, "");
         }
         break;
       case MessageTypeOpen:
@@ -173,11 +182,11 @@ void message_respond(MessageQueue* queue) {
         int res = system(cmd);
         DEBUG_PRINT("Resulted in code %i\n", res);
         sdsfree(cmd);
-        send_message(queue, "");
+        send_message(queue, ctx->id, "");
         break;
       default:
         // Message not recognized
-        send_message(queue, "");
+        send_message(queue, ctx->id, "");
         break;
     }
     // Discard used context
