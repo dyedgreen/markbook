@@ -5,7 +5,7 @@
 #include "sql.h"
 #include "debug.h"
 
-#define INDEX_DB_FILE "markbook.db" // TODO: change to .markbook or similar for release!
+#define INDEX_DB_FILE ".markbook.db"
 
 int init_db(sqlite3* index_db) {
   return SQLITE_OK == sqlite3_exec(index_db, NB_SQL_INIT, NULL, NULL, NULL);
