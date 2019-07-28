@@ -46,6 +46,9 @@
   background: rgba(255,255,255,0);
   transition: .1s;
 }
+.toolbar .content .item * {
+  cursor: pointer;
+}
 .toolbar .content .item:hover {
   background: rgba(255,255,255,0.3);
 }

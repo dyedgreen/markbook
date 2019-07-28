@@ -3,7 +3,8 @@
 CC = gcc
 INC = -Isrc -Ilib -Iui/build
 FLG = -g -std=c99 -O3 -Wall -Wextra -pedantic -Wunicode-whitespace
-DEF = -DDEBUG # TODO: Think about having a nice target that disables this
+DEB = -DDEBUG # Debug specific flags
+DEF = ""
 BIN = bin/markbook
 
 TARGET_OS ?= $(OS)
@@ -28,6 +29,7 @@ UI_BUNDLE = ui/build/bundle.o
 
 all: $(BIN)
 
+app: DEB = ""
 app: $(BIN)
 	rm -r bin/Markbook.app || echo ""
 	cp -r bundle bin/bundle
@@ -40,7 +42,7 @@ $(BIN): $(UI_BUNDLE)
 	$(CC) $(OBJ) $(UI_BUNDLE) $(WEBVIEW_LDFLAGS) -o $(BIN)
 
 $(OBJ): %.o: %.c
-	$(CC) $< $(INC) $(FLG) $(DEF) $(WEBVIEW_CFLAGS) -c -o $@
+	$(CC) $< $(INC) $(FLG) $(DEF) $(DEB) $(WEBVIEW_CFLAGS) -c -o $@
 
 $(UI_BUNDLE):
 	make -C ui
