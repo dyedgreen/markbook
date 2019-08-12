@@ -58,4 +58,4 @@ clean:
 	rm -r bin/Markbook.app || echo "Some file where already cleared."
 	make -C ui clean
 
-.PHONY: $(UI_BUNDLE) run clean
+.PHONY: all app $(UI_BUNDLE) run clean
